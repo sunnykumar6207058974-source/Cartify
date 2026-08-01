@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# Environment Variables & Secrets
+.env
+backend/.env
+
+# Build outputs & dist
+dist/
+.dist/
+frontend/dist/
+
+# OS / Editor logs
+.DS_Store
+*.log
