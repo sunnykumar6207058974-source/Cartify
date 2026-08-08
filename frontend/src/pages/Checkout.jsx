@@ -5,36 +5,68 @@ import Footer from "../components/Footer";
 import { CartContext } from "../context/CartContext";
 
 function Checkout() {
-  const { cart, clearCart, discountPercent } = useContext(CartContext);
+  const { cart, clearCart, discountPercent, discountCode, applyPromoCode, addToast } = useContext(CartContext);
 
+  // 1. Address Form State
   const [formData, setFormData] = useState({
     fullName: "Sunny Kumar",
     email: "sunnykumar6207058974@gmail.com",
-    address: "742 Tech Hub Avenue",
-    city: "San Francisco",
-    zip: "94107",
     phone: "+91 8340112045",
+    street: "Tech Hub Tower, Suite 400",
+    city: "Bengaluru",
+    state: "Karnataka",
+    zip: "560001",
+    country: "India",
     paymentMethod: "card",
     cardNumber: "4532 •••• •••• 8892",
     cardExpiry: "12/28",
     cardCvc: "889",
+    upiId: "sunny@upi",
   });
+
+  // 2. Delivery Option Speed State
+  const [deliveryOption, setDeliveryOption] = useState("standard"); // standard, express, sameday
+
+  // 5. Coupon Input State
+  const [couponInput, setCouponInput] = useState(discountCode || "");
 
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderId, setOrderId] = useState("");
 
+  // Subtotal Calculation
   const subtotal = cart.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
   );
 
+  // Discount Amount
   const discountAmount = (subtotal * discountPercent) / 100;
-  const shippingFee = subtotal > 50 || subtotal === 0 ? 0 : 10;
+
+  // Delivery Charges Calculation based on Delivery Option
+  const getDeliveryFee = () => {
+    if (cart.length === 0) return 0;
+    if (deliveryOption === "express") return 15;
+    if (deliveryOption === "sameday") return 25;
+    // Standard is FREE over $50, else $10
+    return subtotal >= 50 ? 0 : 10;
+  };
+
+  const deliveryFee = getDeliveryFee();
   const taxFee = Math.round((subtotal - discountAmount) * 0.05);
-  const grandTotal = Math.max(0, subtotal - discountAmount + shippingFee + taxFee);
+
+  // Total Amount Calculation
+  const grandTotal = Math.max(0, subtotal - discountAmount + deliveryFee + taxFee);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  // 5. Apply Coupon Code Handler
+  const handleApplyCoupon = (e) => {
+    e.preventDefault();
+    if (couponInput.trim()) {
+      applyPromoCode(couponInput);
+    }
   };
 
   const handleSubmit = (e) => {
@@ -44,6 +76,7 @@ function Checkout() {
     const generatedId = "ORD-" + Math.floor(100000 + Math.random() * 900000);
     setOrderId(generatedId);
     setOrderPlaced(true);
+    addToast(`Order ${generatedId} placed successfully! 📦`);
     clearCart();
   };
 
@@ -51,45 +84,57 @@ function Checkout() {
     <div className="page-wrapper">
       <Navbar />
       <main className="main-content checkout-page">
-        <div className="checkout-container">
-          <h2>Secure Checkout</h2>
-          <p>Complete your shipping and payment details to place your order.</p>
+        <div className="checkout-container container">
+          <div className="page-header-banner">
+            <h1>Secure Express Checkout 🔒</h1>
+            <p>Complete your shipping address, select delivery speed & payment option.</p>
+          </div>
 
           {cart.length === 0 && !orderPlaced ? (
             <div className="empty-cart-card margin-y-medium">
               <h3>Your cart is empty</h3>
               <p>Add products to your cart before proceeding to checkout.</p>
-              <Link to="/" className="btn-primary">
-                Return to Shop
+              <Link to="/products" className="btn-primary">
+                Return to Shop Catalog 🛍️
               </Link>
             </div>
           ) : orderPlaced ? (
             <div className="order-success-card">
               <div className="success-icon">🎉</div>
               <h2>Order Placed Successfully!</h2>
-              <p className="order-id-badge">Order ID: <strong>{orderId}</strong></p>
+              <p className="order-id-badge">Order Reference ID: <strong>{orderId}</strong></p>
               <p className="success-msg">
-                Thank you for shopping with Cartify! We have sent an order confirmation & invoice receipt to{" "}
-                <strong>{formData.email}</strong>.
+                Thank you for shopping with Cartify! We have sent a complete tax invoice & order tracking confirmation to{" "}
+                <strong>{formData.email}</strong> and an SMS alert to <strong>{formData.phone}</strong>.
               </p>
 
               <div className="delivery-estimate-box">
-                <span>📦 Estimated Delivery:</span>
-                <strong>3 - 5 Business Days</strong>
+                <span>📦 Delivery Estimate ({deliveryOption.toUpperCase()}):</span>
+                <strong>
+                  {deliveryOption === "sameday"
+                    ? "Today (Within 6 Hours)"
+                    : deliveryOption === "express"
+                    ? "Tomorrow (24-Hour Express Guarantee)"
+                    : "3 - 5 Business Days"}
+                </strong>
               </div>
 
               <div className="success-actions">
-                <Link to="/" className="btn-primary">
+                <Link to="/orders" className="btn-primary">
+                  View My Orders 📦
+                </Link>
+                <Link to="/products" className="btn-secondary">
                   Continue Shopping 🛍️
                 </Link>
               </div>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="checkout-grid">
-              {/* Left Column: Customer & Shipping Details */}
+              {/* Left Column: 1. Address Form + 2. Delivery Option + 3. Payment Option */}
               <div className="checkout-form-column">
+                {/* 1. Address Form */}
                 <div className="form-card">
-                  <h3>1. Shipping Information</h3>
+                  <h3>1. Shipping Address</h3>
                   <div className="form-group-row">
                     <div className="form-group">
                       <label>Full Name *</label>
@@ -102,7 +147,7 @@ function Checkout() {
                       />
                     </div>
                     <div className="form-group">
-                      <label>Email Address *</label>
+                      <label>Email Address (For Invoice Receipt) *</label>
                       <input
                         type="email"
                         name="email"
@@ -113,12 +158,34 @@ function Checkout() {
                     </div>
                   </div>
 
+                  <div className="form-group-row">
+                    <div className="form-group">
+                      <label>Phone Number (For SMS Alerts) *</label>
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Country *</label>
+                      <select name="country" value={formData.country} onChange={handleChange} className="filter-select">
+                        <option value="India">India</option>
+                        <option value="United States">United States</option>
+                        <option value="United Kingdom">United Kingdom</option>
+                        <option value="Canada">Canada</option>
+                      </select>
+                    </div>
+                  </div>
+
                   <div className="form-group">
                     <label>Street Address *</label>
                     <input
                       type="text"
-                      name="address"
-                      value={formData.address}
+                      name="street"
+                      value={formData.street}
                       onChange={handleChange}
                       required
                     />
@@ -136,7 +203,17 @@ function Checkout() {
                       />
                     </div>
                     <div className="form-group">
-                      <label>Zip / Postal Code *</label>
+                      <label>State / Region *</label>
+                      <input
+                        type="text"
+                        name="state"
+                        value={formData.state}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>ZIP / Postal Code *</label>
                       <input
                         type="text"
                         name="zip"
@@ -145,21 +222,80 @@ function Checkout() {
                         required
                       />
                     </div>
-                    <div className="form-group">
-                      <label>Phone Number *</label>
-                      <input
-                        type="tel"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
                   </div>
                 </div>
 
+                {/* 2. Delivery Option Speed Selection */}
                 <div className="form-card">
-                  <h3>2. Select Payment Method</h3>
+                  <h3>2. Select Delivery Speed</h3>
+                  <div className="delivery-options-grid">
+                    <label
+                      className={`delivery-option-card ${
+                        deliveryOption === "standard" ? "selected" : ""
+                      }`}
+                      onClick={() => setDeliveryOption("standard")}
+                    >
+                      <div className="delivery-card-header">
+                        <input
+                          type="radio"
+                          name="deliveryOption"
+                          value="standard"
+                          checked={deliveryOption === "standard"}
+                          onChange={() => setDeliveryOption("standard")}
+                        />
+                        <strong>🚀 Standard Delivery</strong>
+                      </div>
+                      <p>Est. 3-5 Business Days</p>
+                      <span className="delivery-price-badge">
+                        {subtotal >= 50 ? "FREE" : "$10.00"}
+                      </span>
+                    </label>
+
+                    <label
+                      className={`delivery-option-card ${
+                        deliveryOption === "express" ? "selected" : ""
+                      }`}
+                      onClick={() => setDeliveryOption("express")}
+                    >
+                      <div className="delivery-card-header">
+                        <input
+                          type="radio"
+                          name="deliveryOption"
+                          value="express"
+                          checked={deliveryOption === "express"}
+                          onChange={() => setDeliveryOption("express")}
+                        />
+                        <strong>⚡ 24h Express Dispatch</strong>
+                      </div>
+                      <p>Guaranteed Next Day</p>
+                      <span className="delivery-price-badge">$15.00</span>
+                    </label>
+
+                    <label
+                      className={`delivery-option-card ${
+                        deliveryOption === "sameday" ? "selected" : ""
+                      }`}
+                      onClick={() => setDeliveryOption("sameday")}
+                    >
+                      <div className="delivery-card-header">
+                        <input
+                          type="radio"
+                          name="deliveryOption"
+                          value="sameday"
+                          checked={deliveryOption === "sameday"}
+                          onChange={() => setDeliveryOption("sameday")}
+                        />
+                        <strong>🏎️ Same-Day Rush</strong>
+                      </div>
+                      <p>Delivered Within 6 Hours</p>
+                      <span className="delivery-price-badge">$25.00</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* 3. Payment Option Selection */}
+                <div className="form-card">
+                  <h3>3. Payment Option</h3>
                   <div className="payment-options">
                     <label
                       className={`payment-option ${
@@ -203,7 +339,7 @@ function Checkout() {
                         checked={formData.paymentMethod === "cod"}
                         onChange={handleChange}
                       />
-                      <span>💵 Cash on Delivery</span>
+                      <span>💵 Cash on Delivery (COD)</span>
                     </label>
                   </div>
 
@@ -240,13 +376,29 @@ function Checkout() {
                       </div>
                     </div>
                   )}
+
+                  {formData.paymentMethod === "upi" && (
+                    <div className="upi-fields margin-top-sm">
+                      <div className="form-group">
+                        <label>Virtual Payment Address (UPI ID)</label>
+                        <input
+                          type="text"
+                          name="upiId"
+                          value={formData.upiId}
+                          onChange={handleChange}
+                          placeholder="username@upi"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Right Column: Order Review */}
+              {/* Right Column: 4. Order Summary + 5. Coupon Field */}
               <div className="checkout-summary-column">
                 <div className="order-review-card">
-                  <h3>Order Review ({cart.length} items)</h3>
+                  {/* 4. Order Summary */}
+                  <h3>Order Summary ({cart.reduce((sum, i) => sum + i.quantity, 0)} items)</h3>
 
                   <div className="checkout-items-list">
                     {cart.map((item) => (
@@ -259,35 +411,54 @@ function Checkout() {
                           </span>
                         </div>
                         <span className="preview-total">
-                          ${item.price * item.quantity}
+                          ${(item.price * item.quantity).toFixed(2)}
                         </span>
                       </div>
                     ))}
                   </div>
 
+                  {/* 5. Coupon Field */}
+                  <form onSubmit={handleApplyCoupon} className="promo-box margin-y-sm">
+                    <input
+                      type="text"
+                      placeholder="Promo / Coupon code (SAVE10)"
+                      value={couponInput}
+                      onChange={(e) => setCouponInput(e.target.value)}
+                    />
+                    <button type="submit">Apply</button>
+                  </form>
+                  <div className="promo-hint">
+                    <span>Use <strong>SAVE10</strong> for 10% OFF or <strong>SAVE20</strong> for 20% OFF</span>
+                  </div>
+
+                  {/* Summary Breakdown */}
                   <div className="summary-breakdown">
                     <div className="summary-row">
                       <span>Subtotal</span>
-                      <span>${subtotal}</span>
+                      <span>${subtotal.toFixed(2)}</span>
                     </div>
 
                     {discountPercent > 0 && (
                       <div className="summary-row discount">
-                        <span>Discount ({discountPercent}%)</span>
+                        <span>Coupon Savings ({discountPercent}%)</span>
                         <span>-${discountAmount.toFixed(2)}</span>
                       </div>
                     )}
 
                     <div className="summary-row">
-                      <span>Shipping</span>
+                      <span>Delivery Fee</span>
                       <span>
-                        {shippingFee === 0 ? "FREE" : `$${shippingFee}`}
+                        {deliveryFee === 0 ? (
+                          <strong className="free-shipping">FREE</strong>
+                        ) : (
+                          `$${deliveryFee.toFixed(2)}`
+                        )}
                       </span>
                     </div>
 
                     <div className="summary-row">
-                      <span>Est. Tax</span>
-                      <span>${taxFee}</span>
+                      <span>Est. Tax (5%)</span>
+                      <span>${taxFee.toFixed(2)}</span>
                     </div>
 
                     <div className="summary-divider"></div>
@@ -303,7 +474,7 @@ function Checkout() {
                   </button>
 
                   <p className="guarantee-text">
-                    🔒 By clicking Place Order, you agree to Cartify's terms of service and instant return policy.
+                    🔒 By placing order, you agree to Cartify's 256-Bit SSL Encrypted checkout terms.
                   </p>
                 </div>
               </div>

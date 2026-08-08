@@ -177,6 +177,22 @@ export function CartProvider({ children }) {
     });
   };
 
+  const moveToCartFromWishlist = (product) => {
+    // Add to cart
+    setCart((prevCart) => {
+      const existing = prevCart.find((p) => p.id === product.id);
+      if (existing) {
+        return prevCart.map((p) =>
+          p.id === product.id ? { ...p, quantity: p.quantity + 1 } : p
+        );
+      }
+      return [...prevCart, { ...product, quantity: 1 }];
+    });
+    // Remove from wishlist
+    setWishlist((prev) => prev.filter((item) => item.id !== product.id));
+    addToast(`Moved "${product.name}" to cart! 🛒`);
+  };
+
   const isInWishlist = (id) => {
     return wishlist.some((item) => item.id === id);
   };
@@ -221,6 +237,7 @@ export function CartProvider({ children }) {
         clearCart,
         toggleWishlist,
         isInWishlist,
+        moveToCartFromWishlist,
         addToast,
         removeToast,
         applyPromoCode,

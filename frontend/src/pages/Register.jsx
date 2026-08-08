@@ -2,22 +2,47 @@ import { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import SocialAuthModal from "../components/SocialAuthModal";
+import SocialAuthModal from "../components/Common/SocialAuthModal";
 import { CartContext } from "../context/CartContext";
 import { signInUser } from "../services/api";
 
 function Register() {
   const navigate = useNavigate();
-  const { addToast } = useContext(CartContext);
+  const { addToast, loginUser } = useContext(CartContext);
   const [name, setName] = useState("Sunny Kumar");
   const [email, setEmail] = useState("sunnykumar6207058974@gmail.com");
   const [password, setPassword] = useState("password123");
+
+  // 4. Show/Hide Password state
+  const [showPassword, setShowPassword] = useState(false);
+
+  // 5. Validation Messages state
+  const [errors, setErrors] = useState({});
+
   const [loading, setLoading] = useState(false);
   const [emailStatus, setEmailStatus] = useState("");
   const [activeProvider, setActiveProvider] = useState(null);
 
+  // Real-time Validation
+  const validateForm = () => {
+    const newErrors = {};
+    if (!name || name.trim().length < 2) {
+      newErrors.name = "Full name must be at least 2 characters long";
+    }
+    if (!email || !email.includes("@") || !email.includes(".")) {
+      newErrors.email = "Please enter a valid email address";
+    }
+    if (!password || password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters long";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
+
     setLoading(true);
     setEmailStatus("");
 
@@ -25,9 +50,10 @@ function Register() {
     setLoading(false);
 
     if (result.success) {
-      const msg = `✓ Account created! Welcome email sent to ${email} 📧`;
+      loginUser({ name, email });
+      const msg = `✓ Account created successfully! Welcome email sent to ${email} 📧`;
       setEmailStatus(msg);
-      addToast(`Welcome email sent to ${email}! 📧`);
+      addToast(`Account created! Welcome email sent to ${email} 📧`);
 
       setTimeout(() => {
         navigate("/");
@@ -43,7 +69,8 @@ function Register() {
     setLoading(false);
 
     if (result.success) {
-      const msg = `✓ Account registered via ${socialData.provider === "google" ? "Google" : "Apple"} as ${socialData.name}! Confirmation email sent to ${socialData.email} 📧`;
+      loginUser({ name: socialData.name, email: socialData.email, avatar: socialData.avatar });
+      const msg = `✓ Account registered via ${socialData.provider === "google" ? "Google" : "Apple"} as ${socialData.name}! 📧`;
       setEmailStatus(msg);
       addToast(`Registered via ${socialData.provider === "google" ? "Google" : "Apple"}! 📧`);
 
@@ -70,37 +97,65 @@ function Register() {
           )}
 
           <form onSubmit={handleSubmit} className="auth-form">
+            {/* Name Field with Validation */}
             <div className="form-group">
               <label>Full Name</label>
               <input
                 type="text"
                 placeholder="Sunny Kumar"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (errors.name) setErrors({ ...errors, name: null });
+                }}
+                className={errors.name ? "input-error" : ""}
                 required
               />
+              {errors.name && <span className="validation-error-text">⚠️ {errors.name}</span>}
             </div>
 
+            {/* Email Field with Validation */}
             <div className="form-group">
               <label>Email Address</label>
               <input
                 type="email"
                 placeholder="sunny@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (errors.email) setErrors({ ...errors, email: null });
+                }}
+                className={errors.email ? "input-error" : ""}
                 required
               />
+              {errors.email && <span className="validation-error-text">⚠️ {errors.email}</span>}
             </div>
 
+            {/* Password Field with 4. Show/Hide Password Toggle */}
             <div className="form-group">
               <label>Password</label>
-              <input
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <div className="password-input-wrapper">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (errors.password) setErrors({ ...errors, password: null });
+                  }}
+                  className={errors.password ? "input-error" : ""}
+                  required
+                />
+                <button
+                  type="button"
+                  className="password-toggle-btn"
+                  onClick={() => setShowPassword(!showPassword)}
+                  title={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? "🙈" : "👁️"}
+                </button>
+              </div>
+              {errors.password && <span className="validation-error-text">⚠️ {errors.password}</span>}
             </div>
 
             <button

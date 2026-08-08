@@ -1,5 +1,5 @@
 import { useContext, useState } from "react";
-import { CartContext } from "../context/CartContext";
+import { CartContext } from "../../context/CartContext";
 
 function QuickViewModal({ product, onClose }) {
   const { addToCart, toggleWishlist, isInWishlist } = useContext(CartContext);

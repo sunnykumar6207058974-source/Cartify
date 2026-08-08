@@ -1,4 +1,8 @@
+import { useNavigate } from "react-router-dom";
+
 function CategorySection({ onSelectCategory }) {
+  const navigate = useNavigate();
+
   const categories = [
     {
       name: "Shoes",
@@ -27,6 +31,14 @@ function CategorySection({ onSelectCategory }) {
     },
   ];
 
+  const handleCategoryClick = (categoryName) => {
+    if (onSelectCategory) {
+      onSelectCategory(categoryName);
+    } else {
+      navigate(`/category/${categoryName.toLowerCase()}`);
+    }
+  };
+
   return (
     <section className="category-section-container">
       <div className="section-header">
@@ -39,10 +51,17 @@ function CategorySection({ onSelectCategory }) {
           <div
             className="category-card-item"
             key={index}
-            onClick={() => onSelectCategory && onSelectCategory(category.name)}
+            onClick={() => handleCategoryClick(category.name)}
           >
             <div className="category-img-container">
-              <img src={category.image} alt={category.name} />
+              <img
+                src={category.image}
+                alt={category.name}
+                loading="lazy"
+                onError={(e) => {
+                  e.target.src = "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop&q=80";
+                }}
+              />
               <div className="category-overlay"></div>
             </div>
             <div className="category-info">

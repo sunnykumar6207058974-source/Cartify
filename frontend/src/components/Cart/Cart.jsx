@@ -1,6 +1,6 @@
 import { useContext, useState } from "react";
 import { Link } from "react-router-dom";
-import { CartContext } from "../context/CartContext";
+import { CartContext } from "../../context/CartContext";
 
 function Cart() {
   const {
@@ -15,14 +15,20 @@ function Cart() {
 
   const [promoInput, setPromoInput] = useState("");
 
+  // Real-time Subtotal & Price Updates
   const subtotal = cart.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
   );
 
   const discountAmount = (subtotal * discountPercent) / 100;
-  const shippingFee = subtotal > 50 || subtotal === 0 ? 0 : 10;
+  // Delivery Charges: Free shipping over $50, else $10 flat rate
+  const freeShippingThreshold = 50;
+  const shippingFee = subtotal >= freeShippingThreshold || subtotal === 0 ? 0 : 10;
+  const amountNeededForFreeShipping = Math.max(0, freeShippingThreshold - subtotal);
   const taxFee = Math.round((subtotal - discountAmount) * 0.05);
+
+  // Total Amount Calculation
   const grandTotal = Math.max(0, subtotal - discountAmount + shippingFee + taxFee);
 
   const handleApplyPromo = (e) => {
@@ -40,11 +46,12 @@ function Cart() {
       </div>
 
       {cart.length === 0 ? (
+        /* Empty Cart State */
         <div className="empty-cart-card">
           <div className="empty-cart-icon">🛒</div>
           <h3>Your cart is currently empty</h3>
           <p>Looks like you haven't added any products to your cart yet.</p>
-          <Link to="/" className="btn-primary">
+          <Link to="/products" className="btn-primary">
             Start Shopping Now 🛍️
           </Link>
         </div>
@@ -52,6 +59,17 @@ function Cart() {
         <div className="cart-grid-layout">
           {/* Cart Items List */}
           <div className="cart-items-section">
+            {/* Free Shipping Progress Indicator */}
+            {amountNeededForFreeShipping > 0 ? (
+              <div className="shipping-progress-banner">
+                🚚 Add <strong>${amountNeededForFreeShipping.toFixed(2)}</strong> more to unlock <strong>FREE Shipping</strong>!
+              </div>
+            ) : (
+              <div className="shipping-progress-banner free-unlocked">
+                🎉 Congratulations! You have unlocked <strong>FREE Express Shipping</strong>!
+              </div>
+            )}
+
             <div className="cart-items-header">
               <span>Product ({cart.length} items)</span>
               <span>Price</span>
@@ -69,16 +87,20 @@ function Cart() {
                       <Link to={`/product/${item.id}`} className="item-title">
                         {item.name}
                       </Link>
-                      <span className="item-category">{item.category}</span>
+                      <span className="item-category">
+                        {item.category} {item.color ? `• ${item.color}` : ""} {item.size ? `• ${item.size}` : ""}
+                      </span>
                     </div>
                   </div>
 
                   <div className="cart-item-price">${item.price}</div>
 
+                  {/* Increase & Decrease Quantity */}
                   <div className="cart-item-qty">
                     <button
                       onClick={() => decreaseQuantity(item.id)}
                       aria-label="Decrease quantity"
+                      title="Decrease quantity"
                     >
                       -
                     </button>
@@ -86,15 +108,18 @@ function Cart() {
                     <button
                       onClick={() => increaseQuantity(item.id)}
                       aria-label="Increase quantity"
+                      title="Increase quantity"
                     >
                       +
                     </button>
                   </div>
 
+                  {/* Item Total Price Update */}
                   <div className="cart-item-total">
-                    ${item.price * item.quantity}
+                    ${(item.price * item.quantity).toFixed(2)}
                   </div>
 
+                  {/* Remove Item */}
                   <button
                     className="cart-remove-btn"
                     onClick={() => removeFromCart(item.id)}
@@ -107,16 +132,18 @@ function Cart() {
             </div>
 
             <div className="cart-actions-footer">
-              <Link to="/" className="btn-secondary">
+              <Link to="/products" className="btn-secondary">
                 ← Continue Shopping
               </Link>
+
+              {/* Empty Entire Cart Button */}
               <button className="btn-danger-outline" onClick={clearCart}>
-                Clear Entire Cart
+                Clear Entire Cart 🗑️
               </button>
             </div>
           </div>
 
-          {/* Cart Summary Card */}
+          {/* Cart Order Summary Card */}
           <div className="cart-summary-card">
             <h3>Order Summary</h3>
 
@@ -135,11 +162,13 @@ function Cart() {
             </div>
 
             <div className="summary-breakdown">
+              {/* Subtotal */}
               <div className="summary-row">
                 <span>Subtotal</span>
-                <span>${subtotal}</span>
+                <span>${subtotal.toFixed(2)}</span>
               </div>
 
+              {/* Discount Amount */}
               {discountPercent > 0 && (
                 <div className="summary-row discount">
                   <span>Discount ({discountPercent}%)</span>
@@ -147,26 +176,29 @@ function Cart() {
                 </div>
               )}
 
+              {/* Delivery Charges */}
               <div className="summary-row">
-                <span>Shipping</span>
+                <span>Delivery Charges</span>
                 <span>
                   {shippingFee === 0 ? (
                     <strong className="free-shipping">FREE</strong>
                   ) : (
-                    `$${shippingFee}`
+                    `$${shippingFee.toFixed(2)}`
                   )}
                 </span>
               </div>
 
+              {/* Tax */}
               <div className="summary-row">
                 <span>Estimated Tax (5%)</span>
-                <span>${taxFee}</span>
+                <span>${taxFee.toFixed(2)}</span>
               </div>
 
               <div className="summary-divider"></div>
 
+              {/* Total Amount */}
               <div className="summary-row total">
-                <span>Grand Total</span>
+                <span>Total Amount</span>
                 <span>${grandTotal.toFixed(2)}</span>
               </div>
             </div>

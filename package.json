@@ -1,4 +1,14 @@
 {
+  "name": "cartify-root",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "dev:all": "npm --prefix backend start & npm --prefix frontend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "npm --prefix backend start",
+    "build": "npm --prefix frontend run build"
+  },
   "dependencies": {
     "react-router-dom": "^6.30.4"
   }

@@ -33,7 +33,6 @@ function SocialAuthModal({ provider, onClose, onSuccess }) {
         </button>
 
         <div className="social-auth-container">
-          {/* Header Icon */}
           <div className="social-auth-header">
             {isGoogle ? (
               <div className="google-icon-box">
@@ -67,7 +66,6 @@ function SocialAuthModal({ provider, onClose, onSuccess }) {
             <p>Choose an account to continue to <strong>Cartify</strong></p>
           </div>
 
-          {/* Account selector list */}
           <div className="social-account-card">
             <div className="account-item selected">
               <img src={selectedAccount.avatar} alt="Avatar" className="user-avatar" />
@@ -88,7 +86,6 @@ function SocialAuthModal({ provider, onClose, onSuccess }) {
             </div>
           </div>
 
-          {/* Authentication Action */}
           <button
             className={`btn-primary social-submit-btn ${isGoogle ? "google-btn-theme" : "apple-btn-theme"}`}
             onClick={handleAuthenticate}

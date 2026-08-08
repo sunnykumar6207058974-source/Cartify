@@ -3,7 +3,7 @@ import { getProducts } from "../services/api";
 import ProductCard from "./ProductCard";
 import SearchBar from "./SearchBar";
 import Categories from "./Categories";
-import QuickViewModal from "./QuickViewModal";
+import QuickViewModal from "./Common/QuickViewModal";
 import { CartContext } from "../context/CartContext";
 
 function FeaturedProducts({ initialCategory = "All" }) {
@@ -63,7 +63,6 @@ function FeaturedProducts({ initialCategory = "All" }) {
         <p>Handpicked selection of top-selling items with best price guarantees</p>
       </div>
 
-      {/* Controls Bar: Search & Filters */}
       <div className="products-controls-wrap">
         <SearchBar search={searchQuery} setSearch={setSearchQuery} />
 
@@ -90,7 +89,6 @@ function FeaturedProducts({ initialCategory = "All" }) {
         </div>
       </div>
 
-      {/* Status Messages */}
       {loading && (
         <div className="loader-container">
           <div className="spinner"></div>
@@ -104,7 +102,6 @@ function FeaturedProducts({ initialCategory = "All" }) {
         </div>
       )}
 
-      {/* Products Grid */}
       {!loading && !error && (
         <>
           {sortedProducts.length === 0 ? (
@@ -135,7 +132,6 @@ function FeaturedProducts({ initialCategory = "All" }) {
         </>
       )}
 
-      {/* Quick View Modal */}
       {quickViewProduct && (
         <QuickViewModal
           product={quickViewProduct}

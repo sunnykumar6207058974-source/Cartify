@@ -21,7 +21,6 @@ function Background3DEffect() {
 
     window.addEventListener("resize", handleResize);
 
-    // Mouse coordinates
     let mouse = {
       x: width / 2,
       y: height / 2,
@@ -36,7 +35,6 @@ function Background3DEffect() {
 
     window.addEventListener("mousemove", handleMouseMove);
 
-    // Particle nodes in 3D space
     const particleCount = Math.min(65, Math.floor(width / 22));
     const particles = [];
 
@@ -44,7 +42,7 @@ function Background3DEffect() {
       particles.push({
         x: (Math.random() - 0.5) * width * 1.5,
         y: (Math.random() - 0.5) * height * 1.5,
-        z: Math.random() * 800 + 100, // 3D depth
+        z: Math.random() * 800 + 100,
         size: Math.random() * 2.5 + 1.2,
         color: i % 3 === 0 ? "#6366f1" : i % 3 === 1 ? "#818cf8" : "#f43f5e",
         vx: (Math.random() - 0.5) * 0.6,
@@ -53,11 +51,9 @@ function Background3DEffect() {
       });
     }
 
-    // Focal length for perspective projection
     const fov = 350;
 
     const render = () => {
-      // Smooth interpolation for mouse movement
       mouse.x += (mouse.targetX - mouse.x) * 0.05;
       mouse.y += (mouse.targetY - mouse.y) * 0.05;
 
@@ -70,7 +66,6 @@ function Background3DEffect() {
 
       const projected = [];
 
-      // Update and project 3D particles
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
 
@@ -78,7 +73,6 @@ function Background3DEffect() {
         p.y += p.vy;
         p.z += p.vz;
 
-        // Boundary wrap in 3D space
         if (p.z <= 10) p.z = 800;
         if (p.z > 900) p.z = 50;
         if (p.x < -width) p.x = width;
@@ -86,7 +80,6 @@ function Background3DEffect() {
         if (p.y < -height) p.y = height;
         if (p.y > height) p.y = -height;
 
-        // 3D Perspective Projection formula
         const scale = fov / (fov + p.z);
         const projX = (p.x + mouseOffsetX) * scale + cx;
         const projY = (p.y + mouseOffsetY) * scale + cy;
@@ -95,7 +88,6 @@ function Background3DEffect() {
 
         projected.push({ x: projX, y: projY, size: projSize, alpha, color: p.color, z: p.z });
 
-        // Draw particle node
         ctx.beginPath();
         ctx.arc(projX, projY, projSize, 0, Math.PI * 2);
         ctx.fillStyle = p.color;
@@ -105,7 +97,6 @@ function Background3DEffect() {
         ctx.fill();
       }
 
-      // Draw 3D interconnecting virtual mesh lines
       for (let i = 0; i < projected.length; i++) {
         for (let j = i + 1; j < projected.length; j++) {
           const p1 = projected[i];

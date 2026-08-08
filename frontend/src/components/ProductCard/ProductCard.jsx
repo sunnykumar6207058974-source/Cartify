@@ -1,17 +1,28 @@
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { Link } from "react-router-dom";
-import { CartContext } from "../context/CartContext";
+import { CartContext } from "../../context/CartContext";
+
+const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=700&auto=format&fit=crop&q=80";
 
 function ProductCard({ product, onQuickView }) {
   const { addToCart, toggleWishlist, isInWishlist } = useContext(CartContext);
+  const [imgSrc, setImgSrc] = useState(product?.image || FALLBACK_IMAGE);
+  const [isAdded, setIsAdded] = useState(false);
 
   if (!product) return null;
 
   const isWishlisted = isInWishlist(product.id);
 
+  const handleAddToCart = (e) => {
+    e.preventDefault();
+    addToCart(product);
+    setIsAdded(true);
+    setTimeout(() => setIsAdded(false), 1500);
+  };
+
   return (
     <div className="product-card-modern">
-      {/* Badges */}
+      {/* Discount & Feature Badges */}
       <div className="product-card-badges">
         {product.discount && (
           <span className="badge-tag discount-tag">{product.discount}</span>
@@ -29,17 +40,26 @@ function ProductCard({ product, onQuickView }) {
           toggleWishlist(product);
         }}
         aria-label="Wishlist"
-        title="Add to Wishlist"
+        title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
       >
         {isWishlisted ? "❤️" : "🤍"}
       </button>
 
-      {/* Image Container */}
+      {/* Image Container with Hover Zoom & Quick View */}
       <div className="product-card-image-wrap">
         <Link to={`/product/${product.id}`}>
-          <img src={product.image} alt={product.name} loading="lazy" />
+          <img
+            src={imgSrc}
+            alt={product.name}
+            loading="lazy"
+            onError={() => setImgSrc(FALLBACK_IMAGE)}
+            className="product-main-thumb"
+          />
         </Link>
+
+        {/* Quick View Trigger Button */}
         <button
+          type="button"
           className="quick-view-overlay-btn"
           onClick={() => onQuickView && onQuickView(product)}
         >
@@ -47,7 +67,7 @@ function ProductCard({ product, onQuickView }) {
         </button>
       </div>
 
-      {/* Product Details */}
+      {/* Product Information Body */}
       <div className="product-card-body">
         <span className="product-category-text">{product.category}</span>
         <h3 className="product-title">
@@ -61,7 +81,7 @@ function ProductCard({ product, onQuickView }) {
           <span className="reviews-count">({product.reviewsCount || 42})</span>
         </div>
 
-        {/* Price Row */}
+        {/* Price & Discount Row */}
         <div className="product-price-row">
           <div className="price-wrap">
             <span className="current-price">${product.price}</span>
@@ -71,13 +91,13 @@ function ProductCard({ product, onQuickView }) {
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Add to Cart & Details Action Buttons */}
         <div className="product-card-actions">
           <button
-            className="btn-add-cart"
-            onClick={() => addToCart(product)}
+            className={`btn-add-cart ${isAdded ? "added-success" : ""}`}
+            onClick={handleAddToCart}
           >
-            Add to Cart 🛒
+            {isAdded ? "Added! ✓" : "Add to Cart 🛒"}
           </button>
           <Link
             to={`/product/${product.id}`}

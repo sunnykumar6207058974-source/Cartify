@@ -3,6 +3,7 @@ const products = [
     id: 1,
     name: "Air Max Pro Stealth",
     category: "Shoes",
+    brand: "Nike",
     price: 149,
     originalPrice: 189,
     rating: 4.9,
@@ -11,12 +12,15 @@ const products = [
     badge: "Bestseller",
     description: "Ultra-lightweight mesh running shoes with cloud cushioning and responsive energy return.",
     image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=700&auto=format&fit=crop&q=80",
-    inStock: true
+    inStock: true,
+    colors: ["Black", "Blue"],
+    sizes: ["US 9", "US 10", "US 11"]
   },
   {
     id: 2,
     name: "Apex Series Smartwatch 5",
     category: "Watches",
+    brand: "Apex",
     price: 199,
     originalPrice: 249,
     rating: 4.8,
@@ -25,12 +29,15 @@ const products = [
     badge: "Popular",
     description: "AMOLED full-touch display, heart rate sensor, GPS tracking, and up to 7-day battery life.",
     image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=700&auto=format&fit=crop&q=80",
-    inStock: true
+    inStock: true,
+    colors: ["Silver", "Black"],
+    sizes: ["42mm", "44mm"]
   },
   {
     id: 3,
     name: "SonicPro ANC Headphones",
     category: "Electronics",
+    brand: "Sony",
     price: 129,
     originalPrice: 179,
     rating: 4.7,
@@ -39,12 +46,15 @@ const products = [
     badge: "Trending",
     description: "Active Noise Cancellation studio wireless headphones with deep bass and 40h playtime.",
     image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=700&auto=format&fit=crop&q=80",
-    inStock: true
+    inStock: true,
+    colors: ["Black", "Silver"],
+    sizes: ["Standard"]
   },
   {
     id: 4,
     name: "MacStudio Slim 14 Laptop",
     category: "Electronics",
+    brand: "Apple",
     price: 999,
     originalPrice: 1199,
     rating: 4.9,
@@ -53,12 +63,15 @@ const products = [
     badge: "Top Rated",
     description: "Powered by M-Series Silicon processor, 16GB Unified RAM, 512GB NVMe SSD and Retina XDR Screen.",
     image: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=700&auto=format&fit=crop&q=80",
-    inStock: true
+    inStock: true,
+    colors: ["Silver", "Black"],
+    sizes: ["14 inch"]
   },
   {
     id: 5,
     name: "Urban Explorer Commuter Backpack",
     category: "Bags",
+    brand: "Cartify Pro",
     price: 79,
     originalPrice: 110,
     rating: 4.6,
@@ -67,12 +80,15 @@ const products = [
     badge: "Waterproof",
     description: "Water-resistant tech backpack with dedicated 16-inch laptop compartment and USB charging port.",
     image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=700&auto=format&fit=crop&q=80",
-    inStock: true
+    inStock: true,
+    colors: ["Black", "Blue"],
+    sizes: ["M", "L"]
   },
   {
     id: 6,
     name: "Lumix Pro 4K Mirrorless Camera",
     category: "Camera",
+    brand: "Panasonic",
     price: 699,
     originalPrice: 849,
     rating: 4.9,
@@ -81,12 +97,15 @@ const products = [
     badge: "Pro Gear",
     description: "24.2 MP full-frame sensor, 4K 60fps video recording, and dual IS stabilization system.",
     image: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=700&auto=format&fit=crop&q=80",
-    inStock: true
+    inStock: true,
+    colors: ["Black"],
+    sizes: ["Standard Body"]
   },
   {
     id: 7,
     name: "Vanguard Retro High Sneakers",
     category: "Shoes",
+    brand: "Nike",
     price: 119,
     originalPrice: 150,
     rating: 4.7,
@@ -95,12 +114,15 @@ const products = [
     badge: "New Arrival",
     description: "Classic high-top canvas sneakers with durable rubber outsole and ergonomic ortholite insole.",
     image: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=700&auto=format&fit=crop&q=80",
-    inStock: true
+    inStock: true,
+    colors: ["Orange", "Black"],
+    sizes: ["US 8", "US 9", "US 10"]
   },
   {
     id: 8,
     name: "Chronos Gold Edition Chronograph",
     category: "Watches",
+    brand: "Rolex",
     price: 249,
     originalPrice: 320,
     rating: 4.8,
@@ -109,7 +131,9 @@ const products = [
     badge: "Luxury",
     description: "Stainless steel gold-plated luxury watch with scratch-resistant sapphire glass crystal.",
     image: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=700&auto=format&fit=crop&q=80",
-    inStock: true
+    inStock: true,
+    colors: ["Gold", "Silver"],
+    sizes: ["44mm"]
   }
 ];
 
