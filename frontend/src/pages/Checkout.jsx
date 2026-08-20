@@ -1,83 +1,113 @@
 import { useContext, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { CartContext } from "../context/CartContext";
+import { placeOrder } from "../services/api";
+import { formatCurrency } from "../utils/formatters";
 
 function Checkout() {
-  const { cart, clearCart, discountPercent, discountCode, applyPromoCode, addToast } = useContext(CartContext);
+  const navigate = useNavigate();
+  const { cart, user, clearCart, discountPercent, discountCode, applyPromoCode, addToast } =
+    useContext(CartContext);
 
-  // 1. Address Form State
+  // Address form — pre-filled from logged-in user, editable
   const [formData, setFormData] = useState({
-    fullName: "Sunny Kumar",
-    email: "sunnykumar6207058974@gmail.com",
-    phone: "+91 8340112045",
-    street: "Tech Hub Tower, Suite 400",
-    city: "Bengaluru",
-    state: "Karnataka",
-    zip: "560001",
+    fullName: user?.name || "",
+    email: user?.email || "",
+    phone: user?.phone || "",
+    street: "",
+    city: "",
+    state: "",
+    zip: "",
     country: "India",
     paymentMethod: "card",
-    cardNumber: "4532 •••• •••• 8892",
-    cardExpiry: "12/28",
-    cardCvc: "889",
-    upiId: "sunny@upi",
+    cardNumber: "",
+    cardExpiry: "",
+    cardCvc: "",
+    upiId: "",
   });
 
-  // 2. Delivery Option Speed State
-  const [deliveryOption, setDeliveryOption] = useState("standard"); // standard, express, sameday
-
-  // 5. Coupon Input State
+  const [deliveryOption, setDeliveryOption] = useState("standard");
   const [couponInput, setCouponInput] = useState(discountCode || "");
-
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderId, setOrderId] = useState("");
+  const [placing, setPlacing] = useState(false);
+  const [placeError, setPlaceError] = useState("");
 
-  // Subtotal Calculation
-  const subtotal = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
-
-  // Discount Amount
+  // Price calculations
+  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const discountAmount = (subtotal * discountPercent) / 100;
 
-  // Delivery Charges Calculation based on Delivery Option
   const getDeliveryFee = () => {
     if (cart.length === 0) return 0;
     if (deliveryOption === "express") return 15;
     if (deliveryOption === "sameday") return 25;
-    // Standard is FREE over $50, else $10
     return subtotal >= 50 ? 0 : 10;
   };
 
   const deliveryFee = getDeliveryFee();
   const taxFee = Math.round((subtotal - discountAmount) * 0.05);
-
-  // Total Amount Calculation
   const grandTotal = Math.max(0, subtotal - discountAmount + deliveryFee + taxFee);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // 5. Apply Coupon Code Handler
   const handleApplyCoupon = (e) => {
     e.preventDefault();
-    if (couponInput.trim()) {
-      applyPromoCode(couponInput);
-    }
+    if (couponInput.trim()) applyPromoCode(couponInput);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (cart.length === 0) return;
 
-    const generatedId = "ORD-" + Math.floor(100000 + Math.random() * 900000);
-    setOrderId(generatedId);
-    setOrderPlaced(true);
-    addToast(`Order ${generatedId} placed successfully! 📦`);
-    clearCart();
+    setPlacing(true);
+    setPlaceError("");
+
+    try {
+      const orderPayload = {
+        customer: {
+          name: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          address: `${formData.street}, ${formData.city}, ${formData.state} ${formData.zip}, ${formData.country}`,
+        },
+        items: cart.map((item) => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image,
+        })),
+        total: grandTotal,
+        subtotal,
+        discountAmount,
+        deliveryFee,
+        taxFee,
+        deliveryOption,
+        paymentMethod: formData.paymentMethod,
+      };
+
+      const result = await placeOrder(orderPayload);
+
+      setOrderId(result.data.id);
+      setOrderPlaced(true);
+      addToast(`Order ${result.data.id} placed successfully! 📦`);
+      clearCart();
+    } catch (err) {
+      // 401 = token missing or expired — send user back to login
+      if (err.message?.toLowerCase().includes("unauthori")) {
+        addToast("Session expired. Please sign in again.", "error");
+        navigate("/login", { state: { from: { pathname: "/checkout" } } });
+        return;
+      }
+      setPlaceError(err.message || "Failed to place order. Please try again.");
+      addToast(err.message || "Order failed. Please retry.", "error");
+    } finally {
+      setPlacing(false);
+    }
   };
 
   return (
@@ -87,7 +117,7 @@ function Checkout() {
         <div className="checkout-container container">
           <div className="page-header-banner">
             <h1>Secure Express Checkout 🔒</h1>
-            <p>Complete your shipping address, select delivery speed & payment option.</p>
+            <p>Complete your shipping address, select delivery speed &amp; payment option.</p>
           </div>
 
           {cart.length === 0 && !orderPlaced ? (
@@ -102,10 +132,12 @@ function Checkout() {
             <div className="order-success-card">
               <div className="success-icon">🎉</div>
               <h2>Order Placed Successfully!</h2>
-              <p className="order-id-badge">Order Reference ID: <strong>{orderId}</strong></p>
+              <p className="order-id-badge">
+                Order Reference ID: <strong>{orderId}</strong>
+              </p>
               <p className="success-msg">
-                Thank you for shopping with Cartify! We have sent a complete tax invoice & order tracking confirmation to{" "}
-                <strong>{formData.email}</strong> and an SMS alert to <strong>{formData.phone}</strong>.
+                Thank you for shopping with Cartify! A confirmation has been sent to{" "}
+                <strong>{formData.email}</strong>.
               </p>
 
               <div className="delivery-estimate-box">
@@ -130,9 +162,9 @@ function Checkout() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="checkout-grid">
-              {/* Left Column: 1. Address Form + 2. Delivery Option + 3. Payment Option */}
+              {/* Left Column */}
               <div className="checkout-form-column">
-                {/* 1. Address Form */}
+                {/* 1. Address */}
                 <div className="form-card">
                   <h3>1. Shipping Address</h3>
                   <div className="form-group-row">
@@ -143,16 +175,18 @@ function Checkout() {
                         name="fullName"
                         value={formData.fullName}
                         onChange={handleChange}
+                        placeholder="Your full name"
                         required
                       />
                     </div>
                     <div className="form-group">
-                      <label>Email Address (For Invoice Receipt) *</label>
+                      <label>Email Address *</label>
                       <input
                         type="email"
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
+                        placeholder="you@example.com"
                         required
                       />
                     </div>
@@ -160,18 +194,24 @@ function Checkout() {
 
                   <div className="form-group-row">
                     <div className="form-group">
-                      <label>Phone Number (For SMS Alerts) *</label>
+                      <label>Phone Number *</label>
                       <input
                         type="tel"
                         name="phone"
                         value={formData.phone}
                         onChange={handleChange}
+                        placeholder="+91 98765 43210"
                         required
                       />
                     </div>
                     <div className="form-group">
                       <label>Country *</label>
-                      <select name="country" value={formData.country} onChange={handleChange} className="filter-select">
+                      <select
+                        name="country"
+                        value={formData.country}
+                        onChange={handleChange}
+                        className="filter-select"
+                      >
                         <option value="India">India</option>
                         <option value="United States">United States</option>
                         <option value="United Kingdom">United Kingdom</option>
@@ -187,6 +227,7 @@ function Checkout() {
                       name="street"
                       value={formData.street}
                       onChange={handleChange}
+                      placeholder="123 Main Street, Suite 100"
                       required
                     />
                   </div>
@@ -199,6 +240,7 @@ function Checkout() {
                         name="city"
                         value={formData.city}
                         onChange={handleChange}
+                        placeholder="Bengaluru"
                         required
                       />
                     </div>
@@ -209,6 +251,7 @@ function Checkout() {
                         name="state"
                         value={formData.state}
                         onChange={handleChange}
+                        placeholder="Karnataka"
                         required
                       />
                     </div>
@@ -219,128 +262,67 @@ function Checkout() {
                         name="zip"
                         value={formData.zip}
                         onChange={handleChange}
+                        placeholder="560001"
                         required
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* 2. Delivery Option Speed Selection */}
+                {/* 2. Delivery Speed */}
                 <div className="form-card">
                   <h3>2. Select Delivery Speed</h3>
                   <div className="delivery-options-grid">
-                    <label
-                      className={`delivery-option-card ${
-                        deliveryOption === "standard" ? "selected" : ""
-                      }`}
-                      onClick={() => setDeliveryOption("standard")}
-                    >
-                      <div className="delivery-card-header">
-                        <input
-                          type="radio"
-                          name="deliveryOption"
-                          value="standard"
-                          checked={deliveryOption === "standard"}
-                          onChange={() => setDeliveryOption("standard")}
-                        />
-                        <strong>🚀 Standard Delivery</strong>
-                      </div>
-                      <p>Est. 3-5 Business Days</p>
-                      <span className="delivery-price-badge">
-                        {subtotal >= 50 ? "FREE" : "$10.00"}
-                      </span>
-                    </label>
-
-                    <label
-                      className={`delivery-option-card ${
-                        deliveryOption === "express" ? "selected" : ""
-                      }`}
-                      onClick={() => setDeliveryOption("express")}
-                    >
-                      <div className="delivery-card-header">
-                        <input
-                          type="radio"
-                          name="deliveryOption"
-                          value="express"
-                          checked={deliveryOption === "express"}
-                          onChange={() => setDeliveryOption("express")}
-                        />
-                        <strong>⚡ 24h Express Dispatch</strong>
-                      </div>
-                      <p>Guaranteed Next Day</p>
-                      <span className="delivery-price-badge">$15.00</span>
-                    </label>
-
-                    <label
-                      className={`delivery-option-card ${
-                        deliveryOption === "sameday" ? "selected" : ""
-                      }`}
-                      onClick={() => setDeliveryOption("sameday")}
-                    >
-                      <div className="delivery-card-header">
-                        <input
-                          type="radio"
-                          name="deliveryOption"
-                          value="sameday"
-                          checked={deliveryOption === "sameday"}
-                          onChange={() => setDeliveryOption("sameday")}
-                        />
-                        <strong>🏎️ Same-Day Rush</strong>
-                      </div>
-                      <p>Delivered Within 6 Hours</p>
-                      <span className="delivery-price-badge">$25.00</span>
-                    </label>
+                    {[
+                      { id: "standard", label: "🚀 Standard Delivery", desc: "Est. 3-5 Business Days", price: subtotal >= 50 ? "FREE" : "$10.00" },
+                      { id: "express", label: "⚡ 24h Express Dispatch", desc: "Guaranteed Next Day", price: "$15.00" },
+                      { id: "sameday", label: "🏎️ Same-Day Rush", desc: "Delivered Within 6 Hours", price: "$25.00" },
+                    ].map((opt) => (
+                      <label
+                        key={opt.id}
+                        className={`delivery-option-card ${deliveryOption === opt.id ? "selected" : ""}`}
+                        onClick={() => setDeliveryOption(opt.id)}
+                      >
+                        <div className="delivery-card-header">
+                          <input
+                            type="radio"
+                            name="deliveryOption"
+                            value={opt.id}
+                            checked={deliveryOption === opt.id}
+                            onChange={() => setDeliveryOption(opt.id)}
+                          />
+                          <strong>{opt.label}</strong>
+                        </div>
+                        <p>{opt.desc}</p>
+                        <span className="delivery-price-badge">{opt.price}</span>
+                      </label>
+                    ))}
                   </div>
                 </div>
 
-                {/* 3. Payment Option Selection */}
+                {/* 3. Payment */}
                 <div className="form-card">
                   <h3>3. Payment Option</h3>
                   <div className="payment-options">
-                    <label
-                      className={`payment-option ${
-                        formData.paymentMethod === "card" ? "selected" : ""
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="card"
-                        checked={formData.paymentMethod === "card"}
-                        onChange={handleChange}
-                      />
-                      <span>💳 Credit / Debit Card</span>
-                    </label>
-
-                    <label
-                      className={`payment-option ${
-                        formData.paymentMethod === "upi" ? "selected" : ""
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="upi"
-                        checked={formData.paymentMethod === "upi"}
-                        onChange={handleChange}
-                      />
-                      <span>⚡ UPI / Google Pay / PhonePe</span>
-                    </label>
-
-                    <label
-                      className={`payment-option ${
-                        formData.paymentMethod === "cod" ? "selected" : ""
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="cod"
-                        checked={formData.paymentMethod === "cod"}
-                        onChange={handleChange}
-                      />
-                      <span>💵 Cash on Delivery (COD)</span>
-                    </label>
+                    {[
+                      { value: "card", label: "💳 Credit / Debit Card" },
+                      { value: "upi", label: "⚡ UPI / Google Pay / PhonePe" },
+                      { value: "cod", label: "💵 Cash on Delivery (COD)" },
+                    ].map((opt) => (
+                      <label
+                        key={opt.value}
+                        className={`payment-option ${formData.paymentMethod === opt.value ? "selected" : ""}`}
+                      >
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value={opt.value}
+                          checked={formData.paymentMethod === opt.value}
+                          onChange={handleChange}
+                        />
+                        <span>{opt.label}</span>
+                      </label>
+                    ))}
                   </div>
 
                   {formData.paymentMethod === "card" && (
@@ -352,6 +334,7 @@ function Checkout() {
                           name="cardNumber"
                           value={formData.cardNumber}
                           onChange={handleChange}
+                          placeholder="1234 5678 9012 3456"
                         />
                       </div>
                       <div className="form-group-row">
@@ -362,6 +345,7 @@ function Checkout() {
                             name="cardExpiry"
                             value={formData.cardExpiry}
                             onChange={handleChange}
+                            placeholder="MM/YY"
                           />
                         </div>
                         <div className="form-group">
@@ -371,6 +355,7 @@ function Checkout() {
                             name="cardCvc"
                             value={formData.cardCvc}
                             onChange={handleChange}
+                            placeholder="•••"
                           />
                         </div>
                       </div>
@@ -380,7 +365,7 @@ function Checkout() {
                   {formData.paymentMethod === "upi" && (
                     <div className="upi-fields margin-top-sm">
                       <div className="form-group">
-                        <label>Virtual Payment Address (UPI ID)</label>
+                        <label>UPI ID</label>
                         <input
                           type="text"
                           name="upiId"
@@ -394,10 +379,9 @@ function Checkout() {
                 </div>
               </div>
 
-              {/* Right Column: 4. Order Summary + 5. Coupon Field */}
+              {/* Right Column — Order Summary */}
               <div className="checkout-summary-column">
                 <div className="order-review-card">
-                  {/* 4. Order Summary */}
                   <h3>Order Summary ({cart.reduce((sum, i) => sum + i.quantity, 0)} items)</h3>
 
                   <div className="checkout-items-list">
@@ -406,18 +390,16 @@ function Checkout() {
                         <img src={item.image} alt={item.name} />
                         <div className="preview-info">
                           <strong>{item.name}</strong>
-                          <span>
-                            Qty: {item.quantity} × ${item.price}
-                          </span>
+                          <span>Qty: {item.quantity} × {formatCurrency(item.price)}</span>
                         </div>
                         <span className="preview-total">
-                          ${(item.price * item.quantity).toFixed(2)}
+                          {formatCurrency(item.price * item.quantity)}
                         </span>
                       </div>
                     ))}
                   </div>
 
-                  {/* 5. Coupon Field */}
+                  {/* Coupon */}
                   <form onSubmit={handleApplyCoupon} className="promo-box margin-y-sm">
                     <input
                       type="text"
@@ -431,17 +413,17 @@ function Checkout() {
                     <span>Use <strong>SAVE10</strong> for 10% OFF or <strong>SAVE20</strong> for 20% OFF</span>
                   </div>
 
-                  {/* Summary Breakdown */}
+                  {/* Price Breakdown */}
                   <div className="summary-breakdown">
                     <div className="summary-row">
                       <span>Subtotal</span>
-                      <span>${subtotal.toFixed(2)}</span>
+                      <span>{formatCurrency(subtotal)}</span>
                     </div>
 
                     {discountPercent > 0 && (
                       <div className="summary-row discount">
                         <span>Coupon Savings ({discountPercent}%)</span>
-                        <span>-${discountAmount.toFixed(2)}</span>
+                        <span>-{formatCurrency(discountAmount)}</span>
                       </div>
                     )}
 
@@ -451,30 +433,38 @@ function Checkout() {
                         {deliveryFee === 0 ? (
                           <strong className="free-shipping">FREE</strong>
                         ) : (
-                          `$${deliveryFee.toFixed(2)}`
+                          formatCurrency(deliveryFee)
                         )}
                       </span>
                     </div>
 
                     <div className="summary-row">
                       <span>Est. Tax (5%)</span>
-                      <span>${taxFee.toFixed(2)}</span>
+                      <span>{formatCurrency(taxFee)}</span>
                     </div>
 
                     <div className="summary-divider"></div>
 
                     <div className="summary-row total">
                       <span>Total Amount</span>
-                      <span>${grandTotal.toFixed(2)}</span>
+                      <span>{formatCurrency(grandTotal)}</span>
                     </div>
                   </div>
 
-                  <button type="submit" className="btn-primary place-order-btn">
-                    Place Order (${grandTotal.toFixed(2)}) 🚀
+                  {placeError && (
+                    <div className="auth-error-alert margin-y-sm">{placeError}</div>
+                  )}
+
+                  <button
+                    type="submit"
+                    className="btn-primary place-order-btn"
+                    disabled={placing}
+                  >
+                    {placing ? "Placing Order…" : `Place Order (${formatCurrency(grandTotal)}) 🚀`}
                   </button>
 
                   <p className="guarantee-text">
-                    🔒 By placing order, you agree to Cartify's 256-Bit SSL Encrypted checkout terms.
+                    🔒 By placing order, you agree to Cartify&apos;s 256-Bit SSL Encrypted checkout terms.
                   </p>
                 </div>
               </div>

@@ -14,6 +14,7 @@ function Category() {
 
   const categoryTitle = slug ? slug.charAt(0).toUpperCase() + slug.slice(1) : "All";
 
+  useEffect(() => { document.title = `${categoryTitle} Collection — Cartify`; }, [categoryTitle]);
   const categoryProducts = products.filter(
     (p) => p.category.toLowerCase() === slug?.toLowerCase()
   );

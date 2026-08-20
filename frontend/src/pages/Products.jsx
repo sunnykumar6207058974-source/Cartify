@@ -1,4 +1,4 @@
-import { useState, useContext, useMemo } from "react";
+import { useState, useContext, useMemo, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -11,6 +11,7 @@ import useProducts from "../hooks/useProducts";
 import { CartContext } from "../context/CartContext";
 
 function Products() {
+  useEffect(() => { document.title = "Shop All Products — Cartify"; }, []);
   const { products, loading, error } = useProducts();
   const { searchQuery, setSearchQuery } = useContext(CartContext);
   const [searchParams] = useSearchParams();

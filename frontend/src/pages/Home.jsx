@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
 import { CategorySection } from "../components/Categories";
@@ -10,6 +10,10 @@ import Footer from "../components/Footer";
 
 function Home() {
   const [activeCategory, setActiveCategory] = useState("All");
+
+  useEffect(() => {
+    document.title = "Cartify — Premium E-Commerce Shopping";
+  }, []);
 
   const handleSelectCategory = (catName) => {
     setActiveCategory(catName);

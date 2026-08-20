@@ -3,9 +3,11 @@ import products from "../data/productsData.js";
 
 const router = express.Router();
 
-// GET all products
+// GET /api/products — list products with optional filter, search, and pagination
 router.get("/", (req, res) => {
   const { category, search } = req.query;
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 8));
 
   let filtered = [...products];
 
@@ -24,14 +26,21 @@ router.get("/", (req, res) => {
     );
   }
 
+  const total = filtered.length;
+  const start = (page - 1) * limit;
+  const paginated = filtered.slice(start, start + limit);
+
   res.json({
     success: true,
-    count: filtered.length,
-    data: filtered,
+    count: paginated.length,
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+    data: paginated,
   });
 });
 
-// GET single product by ID
+// GET /api/products/:id — single product by ID
 router.get("/:id", (req, res) => {
   const product = products.find((p) => String(p.id) === String(req.params.id));
 

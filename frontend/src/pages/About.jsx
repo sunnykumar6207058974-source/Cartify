@@ -1,8 +1,10 @@
+import { useEffect } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Testimonials from "../components/Testimonials/Testimonials";
 
 function About() {
+  useEffect(() => { document.title = "About Us — Cartify"; }, []);
   return (
     <div className="page-wrapper">
       <Navbar />

@@ -9,21 +9,17 @@ import { signInUser } from "../services/api";
 function Register() {
   const navigate = useNavigate();
   const { addToast, loginUser } = useContext(CartContext);
-  const [name, setName] = useState("Sunny Kumar");
-  const [email, setEmail] = useState("sunnykumar6207058974@gmail.com");
-  const [password, setPassword] = useState("password123");
 
-  // 4. Show/Hide Password state
+  // Blank defaults — no hardcoded PII
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-
-  // 5. Validation Messages state
   const [errors, setErrors] = useState({});
-
   const [loading, setLoading] = useState(false);
   const [emailStatus, setEmailStatus] = useState("");
   const [activeProvider, setActiveProvider] = useState(null);
 
-  // Real-time Validation
   const validateForm = () => {
     const newErrors = {};
     if (!name || name.trim().length < 2) {
@@ -50,14 +46,16 @@ function Register() {
     setLoading(false);
 
     if (result.success) {
-      loginUser({ name, email });
-      const msg = `✓ Account created successfully! Welcome email sent to ${email} 📧`;
-      setEmailStatus(msg);
-      addToast(`Account created! Welcome email sent to ${email} 📧`);
-
-      setTimeout(() => {
-        navigate("/");
-      }, 1500);
+      loginUser({
+        name: result.user?.name || name,
+        email: result.user?.email || email,
+        token: result.user?.token || null,
+      });
+      setEmailStatus(`✓ Account created! Welcome email sent to ${email} 📧`);
+      addToast(`Welcome to Cartify, ${name}! 🎉`);
+      setTimeout(() => navigate("/"), 1500);
+    } else {
+      setEmailStatus(result.message || "Registration failed. Please try again.");
     }
   };
 
@@ -69,14 +67,14 @@ function Register() {
     setLoading(false);
 
     if (result.success) {
-      loginUser({ name: socialData.name, email: socialData.email, avatar: socialData.avatar });
-      const msg = `✓ Account registered via ${socialData.provider === "google" ? "Google" : "Apple"} as ${socialData.name}! 📧`;
-      setEmailStatus(msg);
-      addToast(`Registered via ${socialData.provider === "google" ? "Google" : "Apple"}! 📧`);
-
-      setTimeout(() => {
-        navigate("/");
-      }, 1500);
+      loginUser({
+        name: result.user?.name || socialData.name,
+        email: result.user?.email || socialData.email,
+        avatar: socialData.avatar,
+        token: result.user?.token || null,
+      });
+      addToast(`Registered via ${socialData.provider === "google" ? "Google" : "Apple"}! 🎉`);
+      setTimeout(() => navigate("/"), 1500);
     }
   };
 
@@ -91,18 +89,17 @@ function Register() {
           </div>
 
           {emailStatus && (
-            <div className="auth-success-alert">
+            <div className={`auth-success-alert${emailStatus.toLowerCase().includes("fail") ? " auth-error-alert" : ""}`}>
               {emailStatus}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="auth-form">
-            {/* Name Field with Validation */}
             <div className="form-group">
               <label>Full Name</label>
               <input
                 type="text"
-                placeholder="Sunny Kumar"
+                placeholder="Your full name"
                 value={name}
                 onChange={(e) => {
                   setName(e.target.value);
@@ -114,12 +111,11 @@ function Register() {
               {errors.name && <span className="validation-error-text">⚠️ {errors.name}</span>}
             </div>
 
-            {/* Email Field with Validation */}
             <div className="form-group">
               <label>Email Address</label>
               <input
                 type="email"
-                placeholder="sunny@example.com"
+                placeholder="you@example.com"
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
@@ -131,13 +127,12 @@ function Register() {
               {errors.email && <span className="validation-error-text">⚠️ {errors.email}</span>}
             </div>
 
-            {/* Password Field with 4. Show/Hide Password Toggle */}
             <div className="form-group">
               <label>Password</label>
               <div className="password-input-wrapper">
                 <input
                   type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
+                  placeholder="Min. 6 characters"
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
@@ -163,7 +158,7 @@ function Register() {
               className="btn-primary auth-submit-btn"
               disabled={loading}
             >
-              {loading ? "Creating account..." : "Create Account & Send Email 🚀"}
+              {loading ? "Creating account…" : "Create Account 🚀"}
             </button>
           </form>
 
@@ -195,7 +190,6 @@ function Register() {
       </main>
       <Footer />
 
-      {/* Google / Apple Authentication Modal */}
       {activeProvider && (
         <SocialAuthModal
           provider={activeProvider}

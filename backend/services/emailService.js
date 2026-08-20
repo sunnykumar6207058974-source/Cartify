@@ -4,7 +4,6 @@ const createTransporter = () => {
   const user = process.env.GMAIL_USER || "";
   const pass = process.env.GMAIL_PASS || "";
 
-  // Check if GMAIL_PASS is configured with a real password (not the placeholder)
   if (user && pass && pass !== "abcd efgh ijkl mnop") {
     return nodemailer.createTransport({
       service: "gmail",
@@ -17,6 +16,9 @@ const createTransporter = () => {
 
 export async function sendWelcomeEmail(userEmail, userName = "Valued Customer") {
   const transporter = createTransporter();
+
+  // Use FRONTEND_URL env var — no hardcoded localhost links
+  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5176";
 
   const htmlContent = `
     <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;">
@@ -32,7 +34,7 @@ export async function sendWelcomeEmail(userEmail, userName = "Valued Customer") 
         </p>
 
         <div style="background-color: #eef2ff; border-left: 4px solid #6366f1; padding: 18px; border-radius: 6px; margin: 24px 0;">
-          <h4 style="margin: 0 0 6px 0; color: #4338ca; font-size: 15px;">🎁 Exclusive 15% Welcome Discount</h4>
+          <h4 style="margin: 0 0 6px 0; color: #4338ca; font-size: 15px;">🎁 Exclusive Welcome Discount</h4>
           <p style="margin: 0; font-size: 14px; color: #475569;">
             Use promo code <strong style="color: #4f46e5; background: #ffffff; padding: 2px 8px; border-radius: 4px;">SAVE10</strong> or <strong style="color: #4f46e5; background: #ffffff; padding: 2px 8px; border-radius: 4px;">SAVE20</strong> at checkout for special savings on your order.
           </p>
@@ -43,7 +45,7 @@ export async function sendWelcomeEmail(userEmail, userName = "Valued Customer") 
         </p>
 
         <div style="margin-top: 32px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center;">
-          <a href="http://localhost:5176" style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: bold; font-size: 15px; display: inline-block;">
+          <a href="${frontendUrl}" style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: bold; font-size: 15px; display: inline-block;">
             Explore Products Now 🚀
           </a>
         </div>
@@ -58,19 +60,18 @@ export async function sendWelcomeEmail(userEmail, userName = "Valued Customer") 
 
   if (!transporter) {
     console.log(`\n======================================================`);
-    console.log(`📧 GMAIL & SMS NOTIFICATION PROCESSED for: ${userEmail}`);
-    console.log(`💡 Current GMAIL_PASS in backend/.env is placeholder 'abcd efgh ijkl mnop'.`);
-    console.log(`👉 To get REAL emails in your phone's Gmail Inbox:`);
-    console.log(`   1. Open: https://myaccount.google.com/apppasswords`);
-    console.log(`   2. Generate 16-letter App Password.`);
-    console.log(`   3. Replace GMAIL_PASS=abcd efgh ijkl mnop with your real 16-letter password in backend/.env`);
+    console.log(`📧 EMAIL NOTIFICATION PROCESSED for: ${userEmail}`);
+    console.log(`💡 GMAIL_PASS in backend/.env is a placeholder.`);
+    console.log(`👉 To receive live emails, generate a 16-letter Google App Password:`);
+    console.log(`   https://myaccount.google.com/apppasswords`);
     console.log(`======================================================\n`);
 
     return {
       success: true,
       delivered: false,
       isPlaceholder: true,
-      message: "Sign-in notification processed! Add real 16-letter Google App Password to backend/.env for live inbox popups.",
+      message:
+        "Sign-in notification processed! Add a real Google App Password to backend/.env for live delivery.",
     };
   }
 
@@ -82,15 +83,16 @@ export async function sendWelcomeEmail(userEmail, userName = "Valued Customer") 
       html: htmlContent,
     });
 
-    console.log(`✅ LIVE GMAIL DELIVERED TO YOUR PHONE/INBOX (${userEmail})! MessageId: ${info.messageId}`);
+    console.log(`✅ LIVE EMAIL DELIVERED (${userEmail})! MessageId: ${info.messageId}`);
     return { success: true, delivered: true, messageId: info.messageId };
   } catch (err) {
-    console.error(`❌ Gmail SMTP Authentication Error:`, err.message);
+    console.error(`❌ Gmail SMTP Error:`, err.message);
     return {
       success: false,
       delivered: false,
       error: err.message,
-      message: "Gmail password invalid. Please generate a 16-letter App Password at https://myaccount.google.com/apppasswords",
+      message:
+        "Gmail delivery failed. Generate a 16-letter App Password at https://myaccount.google.com/apppasswords",
     };
   }
 }

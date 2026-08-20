@@ -1,10 +1,11 @@
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { CartContext } from "../context/CartContext";
 
 function Wishlist() {
+  useEffect(() => { document.title = "My Wishlist — Cartify"; }, []);
   const { wishlist, toggleWishlist, moveToCartFromWishlist } = useContext(CartContext);
 
   const handleMoveAllToCart = () => {

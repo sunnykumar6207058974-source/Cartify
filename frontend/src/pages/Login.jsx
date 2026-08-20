@@ -1,5 +1,5 @@
 import { useState, useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import SocialAuthModal from "../components/Common/SocialAuthModal";
@@ -8,28 +8,28 @@ import { signInUser } from "../services/api";
 
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { addToast, loginUser } = useContext(CartContext);
-  const [email, setEmail] = useState("sunnykumar6207058974@gmail.com");
-  const [phone, setPhone] = useState("+91 8340112045");
-  const [password, setPassword] = useState("password123");
-  
-  // 4. Show/Hide Password State
+
+  // Blank defaults — no hardcoded PII
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  
-  // 5. Validation Messages State
   const [errors, setErrors] = useState({});
-  
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [activeProvider, setActiveProvider] = useState(null);
 
-  // 3. Forgot Password Modal State
+  // Forgot password modal
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [resetStatus, setResetStatus] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
 
-  // Real-time Validation Function
+  // Where to redirect after login (if coming from a protected route)
+  const from = location.state?.from?.pathname || "/";
+
   const validateForm = () => {
     const newErrors = {};
     if (!email || !email.includes("@") || !email.includes(".")) {
@@ -37,9 +37,6 @@ function Login() {
     }
     if (!password || password.length < 6) {
       newErrors.password = "Password must be at least 6 characters long";
-    }
-    if (!phone || phone.length < 10) {
-      newErrors.phone = "Please enter a valid 10-digit mobile phone number";
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -56,14 +53,19 @@ function Login() {
     setLoading(false);
 
     if (result.success) {
-      loginUser({ name: "Sunny Kumar", email, phone });
-      const msg = `✓ Sign-in Successful! Welcome back. SMS alert sent to ${phone} 📱📧`;
-      setStatusMessage(msg);
-      addToast(`Signed in successfully! SMS sent to ${phone} 📱`);
+      // Pass the full user object including JWT token to context
+      loginUser({
+        name: result.user?.name || email.split("@")[0],
+        email: result.user?.email || email,
+        phone: result.user?.phone || phone || null,
+        token: result.user?.token || null,
+      });
 
-      setTimeout(() => {
-        navigate("/");
-      }, 1500);
+      setStatusMessage("✓ Sign-in Successful! Redirecting…");
+      addToast("Signed in successfully! 👋");
+      setTimeout(() => navigate(from, { replace: true }), 1200);
+    } else {
+      setStatusMessage(result.message || "Sign-in failed. Please try again.");
     }
   };
 
@@ -75,18 +77,18 @@ function Login() {
     setLoading(false);
 
     if (result.success) {
-      loginUser({ name: socialData.name, email: socialData.email, avatar: socialData.avatar });
-      const msg = `✓ Signed in via ${socialData.provider === "google" ? "Google" : "Apple"} as ${socialData.name}! 📱📧`;
-      setStatusMessage(msg);
-      addToast(`Signed in via ${socialData.provider === "google" ? "Google" : "Apple"}! 📱`);
+      loginUser({
+        name: result.user?.name || socialData.name,
+        email: result.user?.email || socialData.email,
+        avatar: socialData.avatar,
+        token: result.user?.token || null,
+      });
 
-      setTimeout(() => {
-        navigate("/");
-      }, 1500);
+      addToast(`Signed in via ${socialData.provider === "google" ? "Google" : "Apple"}! 📱`);
+      setTimeout(() => navigate(from, { replace: true }), 1200);
     }
   };
 
-  // 3. Handle Forgot Password Reset Request
   const handleForgotSubmit = (e) => {
     e.preventDefault();
     if (!resetEmail || !resetEmail.includes("@")) {
@@ -96,7 +98,7 @@ function Login() {
     setResetLoading(true);
     setTimeout(() => {
       setResetLoading(false);
-      setResetStatus(`🎉 Password reset link & OTP code sent to ${resetEmail}! Check your inbox.`);
+      setResetStatus(`🎉 Password reset link sent to ${resetEmail}! Check your inbox.`);
       addToast(`Reset link sent to ${resetEmail}! 📧`);
     }, 1200);
   };
@@ -108,22 +110,22 @@ function Login() {
         <div className="auth-card">
           <div className="auth-header">
             <h2>Welcome Back to Cartify</h2>
-            <p>Sign in with your Email & Mobile Phone Number.</p>
+            <p>Sign in with your Email &amp; Password.</p>
           </div>
 
           {statusMessage && (
-            <div className="auth-success-alert">
+            <div className={`auth-success-alert${statusMessage.toLowerCase().includes("fail") || statusMessage.toLowerCase().includes("error") ? " auth-error-alert" : ""}`}>
               {statusMessage}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="auth-form">
-            {/* Email Field with Validation */}
             <div className="form-group">
               <label>Email Address</label>
               <input
                 type="email"
                 value={email}
+                placeholder="you@example.com"
                 onChange={(e) => {
                   setEmail(e.target.value);
                   if (errors.email) setErrors({ ...errors, email: null });
@@ -134,30 +136,23 @@ function Login() {
               {errors.email && <span className="validation-error-text">⚠️ {errors.email}</span>}
             </div>
 
-            {/* Phone Field with Validation */}
             <div className="form-group">
-              <label>Mobile Phone Number (for SMS Alerts)</label>
+              <label>Mobile Phone (optional — for SMS alerts)</label>
               <input
                 type="tel"
                 value={phone}
-                onChange={(e) => {
-                  setPhone(e.target.value);
-                  if (errors.phone) setErrors({ ...errors, phone: null });
-                }}
-                placeholder="+91 8340112045"
-                className={errors.phone ? "input-error" : ""}
-                required
+                placeholder="+91 98765 43210"
+                onChange={(e) => setPhone(e.target.value)}
               />
-              {errors.phone && <span className="validation-error-text">⚠️ {errors.phone}</span>}
             </div>
 
-            {/* Password Field with 4. Show/Hide Password Toggle */}
             <div className="form-group">
               <label>Password</label>
               <div className="password-input-wrapper">
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
+                  placeholder="••••••••"
                   onChange={(e) => {
                     setPassword(e.target.value);
                     if (errors.password) setErrors({ ...errors, password: null });
@@ -181,7 +176,6 @@ function Login() {
               <label className="checkbox-label">
                 <input type="checkbox" defaultChecked /> Remember me
               </label>
-              {/* 3. Forgot Password Trigger Link */}
               <span
                 className="forgot-link"
                 onClick={() => {
@@ -199,7 +193,7 @@ function Login() {
               className="btn-primary auth-submit-btn"
               disabled={loading}
             >
-              {loading ? "Authenticating..." : "Sign In (Send Email & SMS Alerts) 🔑"}
+              {loading ? "Authenticating…" : "Sign In 🔑"}
             </button>
           </form>
 
@@ -225,26 +219,22 @@ function Login() {
           </div>
 
           <div className="auth-footer-link">
-            Don't have an account? <Link to="/register">Create Account</Link>
+            Don&apos;t have an account? <Link to="/register">Create Account</Link>
           </div>
         </div>
       </main>
 
-      {/* 3. Interactive Forgot Password Reset Modal */}
+      {/* Forgot Password Modal */}
       {showForgotModal && (
         <div className="modal-overlay" onClick={() => setShowForgotModal(false)}>
           <div className="modal-content social-auth-modal" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setShowForgotModal(false)}>
-              ✕
-            </button>
+            <button className="modal-close" onClick={() => setShowForgotModal(false)}>✕</button>
             <div className="forgot-modal-container">
               <h3>Reset Your Password 🔒</h3>
-              <p>Enter your registered email address to receive a password reset link and OTP verification code.</p>
+              <p>Enter your registered email address to receive a password reset link.</p>
 
               {resetStatus && (
-                <div className="auth-success-alert margin-y-sm">
-                  {resetStatus}
-                </div>
+                <div className="auth-success-alert margin-y-sm">{resetStatus}</div>
               )}
 
               <form onSubmit={handleForgotSubmit} className="auth-form margin-top-md">
@@ -254,7 +244,7 @@ function Login() {
                     type="email"
                     value={resetEmail}
                     onChange={(e) => setResetEmail(e.target.value)}
-                    placeholder="sunny@example.com"
+                    placeholder="you@example.com"
                     required
                   />
                 </div>
@@ -263,7 +253,7 @@ function Login() {
                   className="btn-primary auth-submit-btn"
                   disabled={resetLoading}
                 >
-                  {resetLoading ? "Sending Link..." : "Send Reset Link & OTP 📧"}
+                  {resetLoading ? "Sending…" : "Send Reset Link 📧"}
                 </button>
               </form>
             </div>
@@ -271,7 +261,7 @@ function Login() {
         </div>
       )}
 
-      {/* Google / Apple Authentication Modal */}
+      {/* Social Auth Modal */}
       {activeProvider && (
         <SocialAuthModal
           provider={activeProvider}

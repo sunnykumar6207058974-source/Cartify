@@ -1,57 +1,48 @@
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import ProfileCard from "../components/Profile/ProfileCard";
 import { CartContext } from "../context/CartContext";
+import { getOrders } from "../services/api";
 
 function Profile() {
-  const { user, wishlist, logoutUser, addToast } = useContext(CartContext);
+  const { user, wishlist, updateUser, logoutUser, addToast } = useContext(CartContext);
   const navigate = useNavigate();
 
-  const currentUser = user || {
-    name: "Sunny Kumar",
-    email: "sunnykumar6207058974@gmail.com",
-    avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
-    phone: "+91 8340112045",
-  };
+  // Pre-fill from context user, no hardcoded PII fallbacks
+  const [profileName, setProfileName] = useState(user?.name || "");
+  const [profilePhone, setProfilePhone] = useState(user?.phone || "");
 
-  // 1. Personal details form state
-  const [profileName, setProfileName] = useState(currentUser.name);
-  const [profilePhone, setProfilePhone] = useState(currentUser.phone || "+91 8340112045");
-
-  // 2. Address section state
-  const [addresses, setAddresses] = useState([
-    {
-      id: 1,
-      tag: "Home (Default)",
-      street: "742 Tech Hub Tower, Suite 400",
-      city: "San Francisco",
-      state: "CA",
-      zip: "94107",
-      country: "United States",
-      isDefault: true,
-    },
-    {
-      id: 2,
-      tag: "Office",
-      street: "Building 4B, Silicon Valley Tech Park",
-      city: "Bengaluru",
-      state: "Karnataka",
-      zip: "560001",
-      country: "India",
-      isDefault: false,
-    },
-  ]);
-
+  // Address section — starts empty, user fills in
+  const [addresses, setAddresses] = useState([]);
   const [showAddAddressModal, setShowAddAddressModal] = useState(false);
-  const [newAddressTag, setNewAddressTag] = useState("Other");
+  const [newAddressTag, setNewAddressTag] = useState("Home");
   const [newAddressStreet, setNewAddressStreet] = useState("");
   const [newAddressCity, setNewAddressCity] = useState("");
   const [newAddressZip, setNewAddressZip] = useState("");
 
+  // Real orders preview
+  const [recentOrders, setRecentOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadOrders() {
+      try {
+        const data = await getOrders({ page: 1, limit: 3 });
+        setRecentOrders(data.data || []);
+      } catch {
+        // Silently fail — profile still works without orders
+      } finally {
+        setOrdersLoading(false);
+      }
+    }
+    loadOrders();
+  }, []);
+
   const handleSaveProfile = (e) => {
     e.preventDefault();
+    updateUser({ name: profileName.trim(), phone: profilePhone.trim() });
     addToast("Profile details updated successfully! 💾");
   };
 
@@ -64,9 +55,9 @@ function Profile() {
         street: newAddressStreet,
         city: newAddressCity,
         state: "State",
-        zip: newAddressZip || "10001",
+        zip: newAddressZip || "000000",
         country: "India",
-        isDefault: false,
+        isDefault: addresses.length === 0,
       };
       setAddresses([...addresses, newEntry]);
       setShowAddAddressModal(false);
@@ -82,22 +73,33 @@ function Profile() {
     navigate("/login");
   };
 
+  const statusLabel = (status) => {
+    const map = {
+      Processing: "🔄 Processing",
+      Shipped: "📦 Shipped",
+      "In-Transit": "🚚 In-Transit",
+      Delivered: "✓ Delivered",
+      Cancelled: "✕ Cancelled",
+    };
+    return map[status] || status;
+  };
+
   return (
     <div className="page-wrapper">
       <Navbar />
       <main className="main-content profile-page container">
         <div className="page-header-banner">
-          <h1>Account Profile & Settings 👤</h1>
-          <p>Manage your personal details, shipping addresses, recent orders & saved items.</p>
+          <h1>Account Profile &amp; Settings 👤</h1>
+          <p>Manage your personal details, shipping addresses, recent orders &amp; saved items.</p>
         </div>
 
         <div className="profile-grid">
           {/* Left Column: User Profile Card */}
-          <ProfileCard user={currentUser} />
+          <ProfileCard user={user} />
 
-          {/* Right Column: Personal Details, Address, Orders, Wishlist */}
+          {/* Right Column */}
           <div className="profile-content-column">
-            {/* 1. Personal details Form Card */}
+            {/* 1. Personal Details */}
             <div className="profile-settings-card">
               <h3>1. Personal Details</h3>
               <form className="profile-form" onSubmit={handleSaveProfile}>
@@ -108,12 +110,13 @@ function Profile() {
                       type="text"
                       value={profileName}
                       onChange={(e) => setProfileName(e.target.value)}
+                      placeholder="Your full name"
                       required
                     />
                   </div>
                   <div className="form-group">
                     <label>Email Address</label>
-                    <input type="email" defaultValue={currentUser.email} readOnly />
+                    <input type="email" defaultValue={user?.email || ""} readOnly />
                   </div>
                 </div>
 
@@ -123,7 +126,7 @@ function Profile() {
                     type="tel"
                     value={profilePhone}
                     onChange={(e) => setProfilePhone(e.target.value)}
-                    required
+                    placeholder="+91 98765 43210"
                   />
                 </div>
 
@@ -133,7 +136,7 @@ function Profile() {
               </form>
             </div>
 
-            {/* 2. Address Section */}
+            {/* 2. Saved Addresses */}
             <div className="profile-settings-card margin-top-md">
               <div className="card-header-flex">
                 <h3>2. Saved Shipping Addresses</h3>
@@ -145,22 +148,26 @@ function Profile() {
                 </button>
               </div>
 
-              <div className="addresses-list-grid">
-                {addresses.map((addr) => (
-                  <div key={addr.id} className={`address-card ${addr.isDefault ? "default-address" : ""}`}>
-                    <div className="address-badge-row">
-                      <span className="address-tag-badge">{addr.tag}</span>
-                      {addr.isDefault && <span className="default-pill">DEFAULT 🏠</span>}
+              {addresses.length === 0 ? (
+                <p className="wishlist-overview-text">No saved addresses yet. Add one above.</p>
+              ) : (
+                <div className="addresses-list-grid">
+                  {addresses.map((addr) => (
+                    <div key={addr.id} className={`address-card ${addr.isDefault ? "default-address" : ""}`}>
+                      <div className="address-badge-row">
+                        <span className="address-tag-badge">{addr.tag}</span>
+                        {addr.isDefault && <span className="default-pill">DEFAULT 🏠</span>}
+                      </div>
+                      <p className="address-street">{addr.street}</p>
+                      <p className="address-city">{addr.city}, {addr.state} - {addr.zip}</p>
+                      <p className="address-country">{addr.country}</p>
                     </div>
-                    <p className="address-street">{addr.street}</p>
-                    <p className="address-city">{addr.city}, {addr.state} - {addr.zip}</p>
-                    <p className="address-country">{addr.country}</p>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* 3. Orders Quick Overview */}
+            {/* 3. Recent Orders */}
             <div className="profile-settings-card margin-top-md">
               <div className="card-header-flex">
                 <h3>3. Recent Orders</h3>
@@ -170,24 +177,25 @@ function Profile() {
               </div>
 
               <div className="profile-orders-preview">
-                <div className="order-preview-chip">
-                  <div>
-                    <strong>Order #CRT-98214</strong>
-                    <span>Air Max Pro & Apex Watch</span>
-                  </div>
-                  <span className="order-status-badge status-delivered">Delivered ✓</span>
-                </div>
-                <div className="order-preview-chip">
-                  <div>
-                    <strong>Order #CRT-76190</strong>
-                    <span>SonicPro ANC Headphones</span>
-                  </div>
-                  <span className="order-status-badge status-in-transit">In-Transit 🚚</span>
-                </div>
+                {ordersLoading ? (
+                  <p>Loading orders…</p>
+                ) : recentOrders.length === 0 ? (
+                  <p className="wishlist-overview-text">No orders yet. Place your first order!</p>
+                ) : (
+                  recentOrders.map((order) => (
+                    <div key={order.id} className="order-preview-chip">
+                      <div>
+                        <strong>Order #{order.id}</strong>
+                        <span>{order.items?.map((i) => i.name).join(", ") || "—"}</span>
+                      </div>
+                      <span className="order-status-badge">{statusLabel(order.status)}</span>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 
-            {/* 4. Wishlist Quick Overview */}
+            {/* 4. Wishlist */}
             <div className="profile-settings-card margin-top-md">
               <div className="card-header-flex">
                 <h3>4. Saved Wishlist Items ({wishlist.length})</h3>
@@ -196,11 +204,11 @@ function Profile() {
                 </Link>
               </div>
               <p className="wishlist-overview-text">
-                You have <strong>{wishlist.length}</strong> items saved in your wishlist. Tap below to review or move items to cart anytime.
+                You have <strong>{wishlist.length}</strong> item{wishlist.length !== 1 ? "s" : ""} saved in your wishlist.
               </p>
             </div>
 
-            {/* 5. Logout Action Banner */}
+            {/* 5. Logout */}
             <div className="logout-section-banner margin-top-md">
               <button className="btn-danger-outline logout-full-btn" onClick={handleLogout}>
                 Sign Out of Cartify 🚪
@@ -210,13 +218,11 @@ function Profile() {
         </div>
       </main>
 
-      {/* Add New Address Modal */}
+      {/* Add Address Modal */}
       {showAddAddressModal && (
         <div className="modal-overlay" onClick={() => setShowAddAddressModal(false)}>
           <div className="modal-content social-auth-modal" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setShowAddAddressModal(false)}>
-              ✕
-            </button>
+            <button className="modal-close" onClick={() => setShowAddAddressModal(false)}>✕</button>
             <div className="forgot-modal-container">
               <h3>Add New Shipping Address 🏠</h3>
               <form onSubmit={handleAddAddress} className="auth-form margin-top-md">
@@ -257,7 +263,6 @@ function Profile() {
                       value={newAddressZip}
                       onChange={(e) => setNewAddressZip(e.target.value)}
                       placeholder="560001"
-                      required
                     />
                   </div>
                 </div>

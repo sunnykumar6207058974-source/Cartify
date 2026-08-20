@@ -1,8 +1,10 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 function NotFound() {
+  useEffect(() => { document.title = "404 Page Not Found — Cartify"; }, []);
   return (
     <div className="page-wrapper">
       <Navbar />
