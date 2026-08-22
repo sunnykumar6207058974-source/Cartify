@@ -19,6 +19,9 @@ export async function sendSMSNotification(phone, message) {
     return { success: false, skipped: true, message: "No phone number provided." };
   }
 
+  // Normalize phone number to E.164 format without spaces/dashes (e.g. +91 83401 12045 -> +918340112045)
+  const cleanPhone = phone.replace(/[^\d+]/g, "");
+  const formattedPhone = cleanPhone.startsWith("+") ? cleanPhone : `+91${cleanPhone}`;
   const smsText = `[Cartify] ${message}`;
 
   if (isTwilioConfigured()) {
@@ -28,14 +31,29 @@ export async function sendSMSNotification(phone, message) {
         process.env.TWILIO_AUTH_TOKEN
       );
 
+      // 1. If TWILIO_VERIFY_SERVICE_SID is configured (works on global trial & production)
+      if (process.env.TWILIO_VERIFY_SERVICE_SID) {
+        try {
+          const verification = await client.verify.v2
+            .services(process.env.TWILIO_VERIFY_SERVICE_SID)
+            .verifications.create({ to: formattedPhone, channel: "sms" });
+
+          console.log(`✅ LIVE VERIFY SMS DELIVERED to ${formattedPhone}! SID: ${verification.sid}`);
+          return { success: true, delivered: true, sid: verification.sid, phone: formattedPhone };
+        } catch (verifyErr) {
+          console.warn("Twilio Verify fallback to standard messages:", verifyErr.message);
+        }
+      }
+
+      // 2. Standard Twilio Messages API
       const result = await client.messages.create({
         body: smsText,
         from: process.env.TWILIO_FROM,
-        to: phone,
+        to: formattedPhone,
       });
 
-      console.log(`✅ LIVE SMS DELIVERED to ${phone}! SID: ${result.sid}`);
-      return { success: true, delivered: true, sid: result.sid, phone };
+      console.log(`✅ LIVE SMS DELIVERED to ${formattedPhone}! SID: ${result.sid}`);
+      return { success: true, delivered: true, sid: result.sid, phone: formattedPhone, body: smsText };
     } catch (err) {
       console.error(`❌ Twilio SMS Error:`, err.message);
       return {

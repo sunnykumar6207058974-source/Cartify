@@ -1,8 +1,139 @@
 import express from "express";
-import { getAllOrders, saveOrder } from "../store/ordersStore.js";
+import { getAllOrders, saveOrder, updateOrderStatus, cancelOrder, deleteOrder } from "../store/ordersStore.js";
 import { authMiddleware } from "../middleware/auth.js";
+import { sendSMSNotification } from "../services/smsService.js";
 
 const router = express.Router();
+
+// POST /api/orders/:id/cancel — cancel an existing order and notify via SMS
+router.post("/:id/cancel", async (req, res, next) => {
+  try {
+    const { reason, phone } = req.body;
+    const orderId = req.params.id;
+
+    const cancelledOrder = cancelOrder(orderId, reason);
+    if (!cancelledOrder) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found or could not be cancelled.",
+      });
+    }
+
+    // Determine customer phone number to receive confirmation SMS
+    const customerPhone =
+      (phone || cancelledOrder.customer?.phone || req.body.customerPhone || "").trim();
+
+    let smsResult = { success: false, skipped: true };
+    if (customerPhone) {
+      const smsMessage = `Your Cartify order #${orderId} has been cancelled successfully. Reason: ${reason || "Customer request"}. Full refund of $${Number(cancelledOrder.total || 0).toFixed(2)} has been initiated.`;
+      smsResult = await sendSMSNotification(customerPhone, smsMessage);
+    }
+
+    res.json({
+      success: true,
+      message: `Order #${orderId} has been cancelled successfully!`,
+      data: cancelledOrder,
+      smsNotification: smsResult,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/orders/all — list all orders across all customers (Admin)
+router.get("/all", (req, res, next) => {
+  try {
+    const { status, search } = req.query;
+    let orders = getAllOrders();
+
+    if (status && status !== "All") {
+      orders = orders.filter(
+        (o) => o.status.toLowerCase() === status.toLowerCase()
+      );
+    }
+
+    if (search) {
+      const q = search.toLowerCase();
+      orders = orders.filter(
+        (o) =>
+          o.id.toLowerCase().includes(q) ||
+          (o.customer?.name && o.customer.name.toLowerCase().includes(q)) ||
+          (o.customer?.email && o.customer.email.toLowerCase().includes(q)) ||
+          (o.userEmail && o.userEmail.toLowerCase().includes(q))
+      );
+    }
+
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
+
+    const total = orders.length;
+    const start = (page - 1) * limit;
+    const paginated = orders.slice(start, start + limit);
+
+    res.json({
+      success: true,
+      count: paginated.length,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+      data: paginated,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PATCH /api/orders/:id/status — update order status (Admin)
+router.patch("/:id/status", (req, res, next) => {
+  try {
+    const { status } = req.body;
+    const validStatuses = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"];
+
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid status. Must be one of: ${validStatuses.join(", ")}`,
+      });
+    }
+
+    const updated = updateOrderStatus(req.params.id, status);
+    if (!updated) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found.",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `Order status updated to ${status}!`,
+      data: updated,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /api/orders/:id — delete order (Admin)
+router.delete("/:id", (req, res, next) => {
+  try {
+    const deleted = deleteOrder(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found to delete.",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Order deleted successfully!",
+      id: req.params.id,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
 // POST /api/orders — create a new order (auth required)
 router.post("/", authMiddleware, (req, res, next) => {

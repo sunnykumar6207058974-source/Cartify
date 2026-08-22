@@ -283,12 +283,25 @@ function Navbar() {
             className={location.pathname === "/about" ? "active" : ""}
             onClick={() => setMobileOpen(false)}
           >
-            About Us
+            ℹ️ About
+          </Link>
+          <Link
+            to="/admin"
+            className={`admin-drawer-link ${location.pathname.startsWith("/admin") ? "active" : ""}`}
+            onClick={() => setMobileOpen(false)}
+          >
+            ⚡ Admin Panel
           </Link>
         </nav>
 
         {/* Right Top Actions: Profile Account, Theme Toggle, Cart */}
         <div className="navbar-actions">
+          {/* Dedicated Admin Panel Quick Button (Always Visible) */}
+          <Link to="/admin" className="admin-nav-distinct-btn" title="Open Admin Control Panel">
+            <span className="admin-btn-icon">⚡</span>
+            <span className="admin-btn-text">Admin Panel</span>
+          </Link>
+
           {/* Account Profile Menu */}
           {user && user.isLoggedIn ? (
             <div
@@ -312,6 +325,13 @@ function Navbar() {
                     <span>{user.email}</span>
                   </div>
                   <div className="dropdown-divider"></div>
+                  <Link
+                    to="/admin"
+                    className="dropdown-item admin-dropdown-highlight"
+                    onClick={() => setAccountDropdownOpen(false)}
+                  >
+                    <span className="item-icon">⚡</span> Admin Control Panel
+                  </Link>
                   <Link
                     to="/profile"
                     className="dropdown-item"
@@ -347,9 +367,11 @@ function Navbar() {
               )}
             </div>
           ) : (
-            <Link to="/login" className="login-nav-btn">
-              👤 Account / Sign In
-            </Link>
+            <div className="guest-nav-actions">
+              <Link to="/login" className="login-nav-btn">
+                👤 Sign In
+              </Link>
+            </div>
           )}
 
           {/* Theme Toggle */}

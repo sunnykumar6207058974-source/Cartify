@@ -27,7 +27,49 @@ export function getAllOrders() {
 
 export function saveOrder(order) {
   const orders = getAllOrders();
-  orders.push(order);
+  orders.unshift(order);
   writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2), "utf-8");
   return order;
+}
+
+export function updateOrderStatus(orderId, status) {
+  const orders = getAllOrders();
+  const index = orders.findIndex((o) => String(o.id) === String(orderId));
+  if (index === -1) return null;
+
+  orders[index] = {
+    ...orders[index],
+    status,
+    updatedAt: new Date().toISOString(),
+  };
+
+  writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2), "utf-8");
+  return orders[index];
+}
+
+export function cancelOrder(orderId, reason) {
+  const orders = getAllOrders();
+  const index = orders.findIndex((o) => String(o.id) === String(orderId));
+  if (index === -1) return null;
+
+  orders[index] = {
+    ...orders[index],
+    status: "Cancelled",
+    cancellationReason: reason || "Customer requested cancellation",
+    cancelledAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2), "utf-8");
+  return orders[index];
+}
+
+export function deleteOrder(orderId) {
+  const orders = getAllOrders();
+  const index = orders.findIndex((o) => String(o.id) === String(orderId));
+  if (index === -1) return false;
+
+  orders.splice(index, 1);
+  writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2), "utf-8");
+  return true;
 }

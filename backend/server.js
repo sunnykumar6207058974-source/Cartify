@@ -1,4 +1,12 @@
-import "dotenv/config";
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, ".env") });
+dotenv.config();
+
 import express from "express";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
@@ -8,14 +16,18 @@ import authRouter from "./routes/auth.js";
 import analyticsRouter from "./routes/analytics.js";
 
 const app = express();
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5002;
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
-// Only allow requests from the configured frontend origin
-const allowedOrigin = process.env.FRONTEND_URL || "http://localhost:5176";
+// Allow requests from frontend origin and any localhost development port
 app.use(
   cors({
-    origin: allowedOrigin,
+    origin: (origin, callback) => {
+      if (!origin || /^http:\/\/localhost(:\d+)?$/.test(origin) || /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)) {
+        return callback(null, true);
+      }
+      callback(new Error(`Origin ${origin} not allowed by CORS`));
+    },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
@@ -81,7 +93,7 @@ app.use((err, req, res, next) => {
 // ─── Start Server ─────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`⚡ Cartify Backend running at http://localhost:${PORT}`);
-  console.log(`🔒 CORS restricted to: ${allowedOrigin}`);
+  console.log(`🔒 CORS enabled for localhost / 127.0.0.1 development`);
   if (
     process.env.GMAIL_USER &&
     process.env.GMAIL_PASS &&

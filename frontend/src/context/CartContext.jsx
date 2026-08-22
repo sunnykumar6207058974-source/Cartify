@@ -58,6 +58,16 @@ export function CartProvider({ children }) {
     }
   });
 
+  // Admin Session State
+  const [adminUser, setAdminUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem("cartify_admin_session");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
   const [toasts, setToasts] = useState([]);
   const [discountCode, setDiscountCode] = useState("");
   const [discountPercent, setDiscountPercent] = useState(0);
@@ -78,6 +88,14 @@ export function CartProvider({ children }) {
       localStorage.removeItem("cartify_user");
     }
   }, [user]);
+
+  useEffect(() => {
+    if (adminUser) {
+      localStorage.setItem("cartify_admin_session", JSON.stringify(adminUser));
+    } else {
+      localStorage.removeItem("cartify_admin_session");
+    }
+  }, [adminUser]);
 
   useEffect(() => {
     if (authToken) {
@@ -133,6 +151,30 @@ export function CartProvider({ children }) {
     setAuthToken(null);
     clearToken();
     addToast("Signed out successfully.", "info");
+  };
+
+  // ─── Admin Authentication ─────────────────────────────────────────────────────
+  const adminLogin = (adminData) => {
+    const adminObj = {
+      name: adminData.name || "Store Administrator",
+      email: adminData.email || "admin@cartify.com",
+      role: adminData.role || "Super Admin",
+      avatar:
+        adminData.avatar ||
+        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+      loggedInAt: new Date().toISOString(),
+    };
+    setAdminUser(adminObj);
+    if (adminData.token) {
+      setAuthToken(adminData.token);
+    }
+    addToast(`Welcome back, ${adminObj.name}! ⚡ Super Admin session active.`);
+  };
+
+  const adminLogout = () => {
+    setAdminUser(null);
+    localStorage.removeItem("cartify_admin_session");
+    addToast("Admin logged out securely. 🔒", "info");
   };
 
   // ─── Toasts ──────────────────────────────────────────────────────────────────
@@ -255,6 +297,11 @@ export function CartProvider({ children }) {
         loginUser,
         updateUser,
         logoutUser,
+        // Admin Auth
+        adminUser,
+        adminLogin,
+        adminLogout,
+        isAdminAuthenticated: Boolean(adminUser),
         // Cart
         cart,
         addToCart,

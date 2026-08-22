@@ -1,5 +1,61 @@
 [
   {
+    "id": "ORD-277726",
+    "customer": {
+      "name": "User 2045",
+      "email": "user_2045@cartify.com",
+      "phone": "+91 8340112045",
+      "address": "hfjgkjlkj, ihiugyf, nbvbj  6568769, India"
+    },
+    "userEmail": "user_2045@cartify.com",
+    "items": [
+      {
+        "id": 4,
+        "name": "MacStudio Slim 14 Laptop",
+        "price": 999,
+        "quantity": 1,
+        "image": "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=700&auto=format&fit=crop&q=80"
+      }
+    ],
+    "total": 1049,
+    "paymentMethod": "card",
+    "status": "Processing",
+    "createdAt": "2026-08-22T06:46:39.544Z"
+  },
+  {
+    "id": "ORD-600704",
+    "customer": {
+      "name": "User 2045",
+      "email": "user_2045@cartify.com",
+      "phone": "+91 8340112045",
+      "address": "264746 miin gali, pahajhjs, hcbbljsncd 5767898, India"
+    },
+    "userEmail": "user_2045@cartify.com",
+    "items": [
+      {
+        "id": 9,
+        "name": "Neon Horizon Runner",
+        "price": 129,
+        "quantity": 1,
+        "image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=700&auto=format&fit=crop&q=80"
+      },
+      {
+        "id": 1,
+        "name": "Air Max Pro Stealth",
+        "price": 149,
+        "quantity": 1,
+        "image": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=700&auto=format&fit=crop&q=80"
+      }
+    ],
+    "total": 292,
+    "paymentMethod": "card",
+    "status": "Cancelled",
+    "createdAt": "2026-08-22T06:09:32.553Z",
+    "cancellationReason": "⏱️ Ordered by mistake / Change of mind",
+    "cancelledAt": "2026-08-22T07:00:08.180Z",
+    "updatedAt": "2026-08-22T07:00:08.180Z"
+  },
+  {
     "id": "ORD-340919",
     "customer": {
       "email": "test@example.com",
@@ -16,8 +72,11 @@
     ],
     "total": 100,
     "paymentMethod": "card",
-    "status": "Processing",
-    "createdAt": "2026-08-14T10:30:41.546Z"
+    "status": "Cancelled",
+    "createdAt": "2026-08-14T10:30:41.546Z",
+    "updatedAt": "2026-08-22T06:54:37.628Z",
+    "cancellationReason": "Ordered by mistake / Change of mind",
+    "cancelledAt": "2026-08-22T06:54:37.627Z"
   },
   {
     "id": "ORD-614374",
