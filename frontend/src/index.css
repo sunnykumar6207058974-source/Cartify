@@ -1384,36 +1384,107 @@ body.dark-theme .btn-view-details:hover {
 .quantity-selector {
   display: flex;
   align-items: center;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: 14px;
   margin-bottom: 24px;
 }
 
-.quantity-selector label {
+.quantity-selector .option-label {
   font-weight: 700;
+  font-size: 14px;
+  color: var(--slate-800);
+  margin-bottom: 0;
 }
 
 .qty-controls {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   background: white;
-  border: 1px solid var(--slate-200);
-  border-radius: var(--radius-sm);
+  border: 2px solid var(--slate-300);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
-.qty-controls button {
-  width: 40px;
-  height: 40px;
+.qty-controls .qty-btn {
+  width: 44px;
+  height: 42px;
   border: none;
-  background: none;
-  font-size: 18px;
+  background: var(--slate-50);
+  color: var(--slate-900);
+  font-size: 20px;
   font-weight: 800;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  user-select: none;
 }
 
-.qty-controls span {
-  width: 30px;
-  text-align: center;
+.qty-controls .qty-btn:hover {
+  background: var(--primary-600);
+  color: white;
+}
+
+.qty-controls .qty-btn:active {
+  transform: scale(0.92);
+}
+
+.qty-controls .qty-display-number {
+  min-width: 50px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
   font-weight: 800;
+  color: var(--slate-900) !important;
+  background: white;
+  user-select: none;
+}
+
+.in-cart-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(34, 197, 94, 0.12);
+  color: #15803d;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+body.dark-theme .quantity-selector .option-label {
+  color: #cbd5e1;
+}
+
+body.dark-theme .qty-controls {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+body.dark-theme .qty-controls .qty-btn {
+  background: #1e293b;
+  color: #f8fafc;
+}
+
+body.dark-theme .qty-controls .qty-btn:hover {
+  background: var(--primary-600);
+  color: white;
+}
+
+body.dark-theme .qty-controls .qty-display-number {
+  background: #0f172a;
+  color: #ffffff !important;
+}
+
+body.dark-theme .in-cart-status-badge {
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+  border-color: rgba(34, 197, 94, 0.4);
 }
 
 .button-group-row {
@@ -2146,25 +2217,52 @@ body.dark-theme .btn-view-details:hover {
 }
 
 .modal-qty {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  border: 1px solid var(--slate-200);
-  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--slate-300);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: white;
 }
 
 .modal-qty button {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 36px;
   border: none;
-  background: none;
+  background: var(--slate-100);
+  color: var(--slate-800);
+  font-size: 16px;
   font-weight: 800;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.modal-qty button:hover {
+  background: var(--primary-600);
+  color: white;
 }
 
 .modal-qty span {
-  width: 24px;
+  min-width: 32px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  font-weight: 700;
+  font-weight: 800;
+  color: var(--slate-900) !important;
+}
+
+body.dark-theme .modal-qty {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+body.dark-theme .modal-qty span {
+  color: #ffffff !important;
 }
 
 .btn-wishlist {

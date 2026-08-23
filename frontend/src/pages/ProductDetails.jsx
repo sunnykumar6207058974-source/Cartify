@@ -13,6 +13,7 @@ function ProductDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const {
+    cart,
     addToCart,
     toggleWishlist,
     isInWishlist,
@@ -296,12 +297,35 @@ function ProductDetails() {
               {/* Quantity Selector & Actions */}
               <div className="details-actions-wrapper">
                 <div className="quantity-selector">
-                  <label className="option-label">Quantity:</label>
+                  <label className="option-label">Select Quantity:</label>
                   <div className="qty-controls">
-                    <button onClick={() => setQuantity((q) => Math.max(1, q - 1))}>-</button>
-                    <span>{quantity}</span>
-                    <button onClick={() => setQuantity((q) => q + 1)}>+</button>
+                    <button
+                      type="button"
+                      className="qty-btn minus"
+                      onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                      aria-label="Decrease Quantity"
+                    >
+                      −
+                    </button>
+                    <span className="qty-display-number">{quantity}</span>
+                    <button
+                      type="button"
+                      className="qty-btn plus"
+                      onClick={() => setQuantity((q) => q + 1)}
+                      aria-label="Increase Quantity"
+                    >
+                      +
+                    </button>
                   </div>
+
+                  {(() => {
+                    const cartItem = cart?.find((i) => String(i.id) === String(product.id));
+                    return cartItem && cartItem.quantity > 0 ? (
+                      <span className="in-cart-status-badge">
+                        ✓ {cartItem.quantity} already in Cart
+                      </span>
+                    ) : null;
+                  })()}
                 </div>
 
                 <div className="button-group-row">
