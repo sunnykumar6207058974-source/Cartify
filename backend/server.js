@@ -19,14 +19,20 @@ const app = express();
 const PORT = process.env.PORT || 5002;
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
-// Allow requests from frontend origin and any localhost development port
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || /^http:\/\/localhost(:\d+)?$/.test(origin) || /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)) {
+      if (
+        !origin ||
+        /^http:\/\/localhost(:\d+)?$/.test(origin) ||
+        /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin) ||
+        /\.vercel\.app$/.test(origin) ||
+        origin.includes("cartify") ||
+        (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL)
+      ) {
         return callback(null, true);
       }
-      callback(new Error(`Origin ${origin} not allowed by CORS`));
+      return callback(null, true);
     },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
