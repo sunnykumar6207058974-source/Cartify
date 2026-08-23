@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://cartify-store-amber.vercel.app/sitemap.xml
