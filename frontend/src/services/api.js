@@ -1,6 +1,6 @@
 import defaultProducts from "../data/products";
 
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5002/api";
+const BASE_URL = import.meta.env.VITE_API_URL || "https://cartify-backend-y7c6.onrender.com/api";
 
 // ─── Token helpers ────────────────────────────────────────────────────────────
 export function getStoredToken() {
