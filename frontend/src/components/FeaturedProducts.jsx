@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from "react";
 import { getProducts } from "../services/api";
 import ProductCard from "./ProductCard";
 import SearchBar from "./SearchBar";
-import Categories from "./Categories";
+import Categories from "./Categories/Categories";
 import QuickViewModal from "./Common/QuickViewModal";
 import { CartContext } from "../context/CartContext";
 
@@ -15,7 +15,12 @@ function FeaturedProducts({ initialCategory = "All" }) {
   const [sortBy, setSortBy] = useState("default");
   const [quickViewProduct, setQuickViewProduct] = useState(null);
 
-  const categoryToUse = initialCategory || selectedCategory;
+  // Sync state if initialCategory prop changes from external clicks
+  useEffect(() => {
+    if (initialCategory) {
+      setSelectedCategory(initialCategory);
+    }
+  }, [initialCategory]);
 
   useEffect(() => {
     async function loadProducts() {
@@ -39,12 +44,13 @@ function FeaturedProducts({ initialCategory = "All" }) {
     const matchSearch =
       !activeSearch ||
       product.name.toLowerCase().includes(activeSearch) ||
-      product.category.toLowerCase().includes(activeSearch);
+      product.category.toLowerCase().includes(activeSearch) ||
+      (product.brand && product.brand.toLowerCase().includes(activeSearch));
 
-    const activeCat = categoryToUse;
     const matchCategory =
-      activeCat === "All" ||
-      product.category.toLowerCase() === activeCat.toLowerCase();
+      !selectedCategory ||
+      selectedCategory === "All" ||
+      product.category.toLowerCase() === selectedCategory.toLowerCase();
 
     return matchSearch && matchCategory;
   });
@@ -68,7 +74,7 @@ function FeaturedProducts({ initialCategory = "All" }) {
 
         <div className="filters-row">
           <Categories
-            selectedCategory={categoryToUse}
+            selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
           />
 
@@ -106,8 +112,8 @@ function FeaturedProducts({ initialCategory = "All" }) {
         <>
           {sortedProducts.length === 0 ? (
             <div className="no-results-box">
-              <h3>No products found matching "{searchQuery}".</h3>
-              <p>Try clearing filters or searching for something else.</p>
+              <h3>No products found for "{selectedCategory !== "All" ? selectedCategory : searchQuery}".</h3>
+              <p>Try clearing filters or selecting another category.</p>
               <button
                 className="btn-secondary"
                 onClick={() => {

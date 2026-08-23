@@ -7,20 +7,33 @@ import { CartContext } from "../context/CartContext";
 import { getOrders } from "../services/api";
 
 function Profile() {
-  const { user, wishlist, updateUser, logoutUser, addToast } = useContext(CartContext);
+  const {
+    user,
+    wishlist,
+    updateUser,
+    logoutUser,
+    addToast,
+    addresses,
+    addAddress,
+    deleteAddress,
+    setDefaultAddress,
+  } = useContext(CartContext);
   const navigate = useNavigate();
 
-  // Pre-fill from context user, no hardcoded PII fallbacks
+  // Personal details state
   const [profileName, setProfileName] = useState(user?.name || "");
   const [profilePhone, setProfilePhone] = useState(user?.phone || "");
 
-  // Address section — starts empty, user fills in
-  const [addresses, setAddresses] = useState([]);
+  // Address modal state
   const [showAddAddressModal, setShowAddAddressModal] = useState(false);
   const [newAddressTag, setNewAddressTag] = useState("Home");
+  const [newAddressFullName, setNewAddressFullName] = useState(user?.name || "");
+  const [newAddressPhone, setNewAddressPhone] = useState(user?.phone || "");
   const [newAddressStreet, setNewAddressStreet] = useState("");
   const [newAddressCity, setNewAddressCity] = useState("");
+  const [newAddressState, setNewAddressState] = useState("Karnataka");
   const [newAddressZip, setNewAddressZip] = useState("");
+  const [newAddressIsDefault, setNewAddressIsDefault] = useState(false);
 
   // Real orders preview
   const [recentOrders, setRecentOrders] = useState([]);
@@ -32,7 +45,7 @@ function Profile() {
         const data = await getOrders({ page: 1, limit: 3 });
         setRecentOrders(data.data || []);
       } catch {
-        // Silently fail — profile still works without orders
+        // Silently fail
       } finally {
         setOrdersLoading(false);
       }
@@ -49,22 +62,23 @@ function Profile() {
   const handleAddAddress = (e) => {
     e.preventDefault();
     if (newAddressStreet && newAddressCity) {
-      const newEntry = {
-        id: Date.now(),
+      addAddress({
         tag: newAddressTag,
+        fullName: newAddressFullName || profileName,
+        phone: newAddressPhone || profilePhone,
         street: newAddressStreet,
         city: newAddressCity,
-        state: "State",
-        zip: newAddressZip || "000000",
+        state: newAddressState,
+        zip: newAddressZip || "560001",
         country: "India",
-        isDefault: addresses.length === 0,
-      };
-      setAddresses([...addresses, newEntry]);
+        isDefault: newAddressIsDefault || addresses.length === 0,
+      });
+
       setShowAddAddressModal(false);
       setNewAddressStreet("");
       setNewAddressCity("");
       setNewAddressZip("");
-      addToast("New shipping address added! 🏠");
+      setNewAddressIsDefault(false);
     }
   };
 
@@ -136,10 +150,13 @@ function Profile() {
               </form>
             </div>
 
-            {/* 2. Saved Addresses */}
+            {/* 2. Multi-Address Book */}
             <div className="profile-settings-card margin-top-md">
               <div className="card-header-flex">
-                <h3>2. Saved Shipping Addresses</h3>
+                <div>
+                  <h3>2. Saved Shipping Address Book ({addresses.length})</h3>
+                  <p className="sub-caption-text">Manage delivery addresses for seamless 1-click checkout.</p>
+                </div>
                 <button
                   className="btn-secondary btn-sm"
                   onClick={() => setShowAddAddressModal(true)}
@@ -149,18 +166,42 @@ function Profile() {
               </div>
 
               {addresses.length === 0 ? (
-                <p className="wishlist-overview-text">No saved addresses yet. Add one above.</p>
+                <p className="wishlist-overview-text">No saved addresses yet. Add your first address above.</p>
               ) : (
                 <div className="addresses-list-grid">
                   {addresses.map((addr) => (
-                    <div key={addr.id} className={`address-card ${addr.isDefault ? "default-address" : ""}`}>
+                    <div
+                      key={addr.id}
+                      className={`address-card ${addr.isDefault ? "default-address" : ""}`}
+                    >
                       <div className="address-badge-row">
-                        <span className="address-tag-badge">{addr.tag}</span>
+                        <span className="address-tag-badge">🏷️ {addr.tag}</span>
                         {addr.isDefault && <span className="default-pill">DEFAULT 🏠</span>}
                       </div>
+
+                      <strong className="addr-recipient">{addr.fullName}</strong>
                       <p className="address-street">{addr.street}</p>
-                      <p className="address-city">{addr.city}, {addr.state} - {addr.zip}</p>
-                      <p className="address-country">{addr.country}</p>
+                      <p className="address-city">
+                        {addr.city}, {addr.state} - {addr.zip}
+                      </p>
+                      <p className="address-country">📞 {addr.phone || "No phone provided"}</p>
+
+                      <div className="address-card-actions">
+                        {!addr.isDefault && (
+                          <button
+                            className="btn-link-action"
+                            onClick={() => setDefaultAddress(addr.id)}
+                          >
+                            Set as Default ⭐
+                          </button>
+                        )}
+                        <button
+                          className="btn-link-danger"
+                          onClick={() => deleteAddress(addr.id)}
+                        >
+                          Delete 🗑️
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -221,22 +262,55 @@ function Profile() {
       {/* Add Address Modal */}
       {showAddAddressModal && (
         <div className="modal-overlay" onClick={() => setShowAddAddressModal(false)}>
-          <div className="modal-content social-auth-modal" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setShowAddAddressModal(false)}>✕</button>
+          <div
+            className="modal-content social-auth-modal animate-scale-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button className="modal-close" onClick={() => setShowAddAddressModal(false)}>
+              ✕
+            </button>
             <div className="forgot-modal-container">
               <h3>Add New Shipping Address 🏠</h3>
+              <p>Save this address to your address book for instant checkout.</p>
+
               <form onSubmit={handleAddAddress} className="auth-form margin-top-md">
+                <div className="form-group-row">
+                  <div className="form-group">
+                    <label>Address Label</label>
+                    <select
+                      value={newAddressTag}
+                      onChange={(e) => setNewAddressTag(e.target.value)}
+                    >
+                      <option value="Home">Home 🏠</option>
+                      <option value="Work / Office">Work / Office 🏢</option>
+                      <option value="Other">Other 📍</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Recipient Name</label>
+                    <input
+                      type="text"
+                      value={newAddressFullName}
+                      onChange={(e) => setNewAddressFullName(e.target.value)}
+                      placeholder="e.g. Sunny Kumar"
+                      required
+                    />
+                  </div>
+                </div>
+
                 <div className="form-group">
-                  <label>Address Label (e.g. Home, Office)</label>
+                  <label>Contact Phone Number</label>
                   <input
-                    type="text"
-                    value={newAddressTag}
-                    onChange={(e) => setNewAddressTag(e.target.value)}
+                    type="tel"
+                    value={newAddressPhone}
+                    onChange={(e) => setNewAddressPhone(e.target.value)}
+                    placeholder="+91 98765 43210"
                     required
                   />
                 </div>
+
                 <div className="form-group">
-                  <label>Street Address</label>
+                  <label>Street Address &amp; Apartment / Suite</label>
                   <input
                     type="text"
                     value={newAddressStreet}
@@ -245,6 +319,7 @@ function Profile() {
                     required
                   />
                 </div>
+
                 <div className="form-group-row">
                   <div className="form-group">
                     <label>City</label>
@@ -257,17 +332,40 @@ function Profile() {
                     />
                   </div>
                   <div className="form-group">
-                    <label>Zip Code</label>
+                    <label>State / Province</label>
+                    <input
+                      type="text"
+                      value={newAddressState}
+                      onChange={(e) => setNewAddressState(e.target.value)}
+                      placeholder="Karnataka"
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Postal / Zip Code</label>
                     <input
                       type="text"
                       value={newAddressZip}
                       onChange={(e) => setNewAddressZip(e.target.value)}
-                      placeholder="560001"
+                      placeholder="560103"
+                      required
                     />
                   </div>
                 </div>
+
+                <div className="form-checkbox-group margin-y-sm">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={newAddressIsDefault}
+                      onChange={(e) => setNewAddressIsDefault(e.target.checked)}
+                    />
+                    <span>Set as my default shipping address</span>
+                  </label>
+                </div>
+
                 <button type="submit" className="btn-primary auth-submit-btn">
-                  Save Address 🏠
+                  Save Address to Profile 🏠
                 </button>
               </form>
             </div>

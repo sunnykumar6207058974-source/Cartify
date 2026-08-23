@@ -23,12 +23,45 @@ export function CartProvider({ children }) {
     }
   });
 
+  // Recently Viewed Products
+  const [recentlyViewed, setRecentlyViewed] = useState(() => {
+    try {
+      const saved = localStorage.getItem("cartify_recently_viewed");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Saved Shipping Address Book
+  const [addresses, setAddresses] = useState(() => {
+    try {
+      const saved = localStorage.getItem("cartify_addresses");
+      return saved
+        ? JSON.parse(saved)
+        : [
+            {
+              id: "addr_default_1",
+              tag: "Home",
+              fullName: "Sunny Kumar",
+              phone: "+91 98765 43210",
+              street: "Flat 402, Skyline Residency, Outer Ring Road",
+              city: "Bengaluru",
+              state: "Karnataka",
+              zip: "560103",
+              country: "India",
+              isDefault: true,
+            },
+          ];
+    } catch {
+      return [];
+    }
+  });
+
   const [user, setUser] = useState(() => {
     try {
       const saved = localStorage.getItem("cartify_user");
       const jwt = localStorage.getItem("cartify_jwt");
-      // If a stored user has no JWT the session is stale (pre-auth or expired).
-      // Treat them as unauthenticated so they have to sign in again.
       if (saved && !jwt) {
         localStorage.removeItem("cartify_user");
         return null;
@@ -82,6 +115,14 @@ export function CartProvider({ children }) {
   }, [wishlist]);
 
   useEffect(() => {
+    localStorage.setItem("cartify_recently_viewed", JSON.stringify(recentlyViewed));
+  }, [recentlyViewed]);
+
+  useEffect(() => {
+    localStorage.setItem("cartify_addresses", JSON.stringify(addresses));
+  }, [addresses]);
+
+  useEffect(() => {
     if (user) {
       localStorage.setItem("cartify_user", JSON.stringify(user));
     } else {
@@ -121,10 +162,6 @@ export function CartProvider({ children }) {
   };
 
   // ─── Auth ────────────────────────────────────────────────────────────────────
-  /**
-   * Called after a successful sign-in.
-   * Accepts the full API user object; stores token separately.
-   */
   const loginUser = (userData) => {
     const { token, ...rest } = userData;
     const newUser = {
@@ -141,7 +178,6 @@ export function CartProvider({ children }) {
     addToast(`Signed in as ${newUser.name}! 👋`);
   };
 
-  /** Updates mutable profile fields (name, phone) in context + localStorage */
   const updateUser = (fields) => {
     setUser((prev) => (prev ? { ...prev, ...fields } : prev));
   };
@@ -193,10 +229,10 @@ export function CartProvider({ children }) {
   // ─── Cart ─────────────────────────────────────────────────────────────────────
   const addToCart = (product, quantity = 1) => {
     setCart((prevCart) => {
-      const existing = prevCart.find((p) => p.id === product.id);
+      const existing = prevCart.find((p) => String(p.id) === String(product.id));
       if (existing) {
         return prevCart.map((p) =>
-          p.id === product.id
+          String(p.id) === String(product.id)
             ? { ...p, quantity: p.quantity + quantity }
             : p
         );
@@ -207,8 +243,8 @@ export function CartProvider({ children }) {
   };
 
   const removeFromCart = (id) => {
-    const item = cart.find((i) => i.id === id);
-    setCart((prev) => prev.filter((item) => item.id !== id));
+    const item = cart.find((i) => String(i.id) === String(id));
+    setCart((prev) => prev.filter((item) => String(item.id) !== String(id)));
     if (item) {
       addToast(`Removed "${item.name}" from cart.`, "info");
     }
@@ -217,7 +253,7 @@ export function CartProvider({ children }) {
   const increaseQuantity = (id) => {
     setCart((prev) =>
       prev.map((item) =>
-        item.id === id ? { ...item, quantity: item.quantity + 1 } : item
+        String(item.id) === String(id) ? { ...item, quantity: item.quantity + 1 } : item
       )
     );
   };
@@ -226,7 +262,7 @@ export function CartProvider({ children }) {
     setCart((prev) =>
       prev
         .map((item) =>
-          item.id === id ? { ...item, quantity: item.quantity - 1 } : item
+          String(item.id) === String(id) ? { ...item, quantity: item.quantity - 1 } : item
         )
         .filter((item) => item.quantity > 0)
     );
@@ -240,10 +276,10 @@ export function CartProvider({ children }) {
   // ─── Wishlist ─────────────────────────────────────────────────────────────────
   const toggleWishlist = (product) => {
     setWishlist((prev) => {
-      const exists = prev.some((item) => item.id === product.id);
+      const exists = prev.some((item) => String(item.id) === String(product.id));
       if (exists) {
         addToast(`Removed "${product.name}" from wishlist`, "info");
-        return prev.filter((item) => item.id !== product.id);
+        return prev.filter((item) => String(item.id) !== String(product.id));
       } else {
         addToast(`Added "${product.name}" to wishlist! ❤️`);
         return [...prev, product];
@@ -252,34 +288,108 @@ export function CartProvider({ children }) {
   };
 
   const moveToCartFromWishlist = (product) => {
-    setCart((prevCart) => {
-      const existing = prevCart.find((p) => p.id === product.id);
-      if (existing) {
-        return prevCart.map((p) =>
-          p.id === product.id ? { ...p, quantity: p.quantity + 1 } : p
-        );
-      }
-      return [...prevCart, { ...product, quantity: 1 }];
-    });
-    setWishlist((prev) => prev.filter((item) => item.id !== product.id));
-    addToast(`Moved "${product.name}" to cart! 🛒`);
+    addToCart(product, 1);
+    setWishlist((prev) => prev.filter((item) => String(item.id) !== String(product.id)));
   };
 
   const isInWishlist = (id) => {
-    return wishlist.some((item) => item.id === id);
+    return wishlist.some((item) => String(item.id) === String(id));
+  };
+
+  // ─── Recently Viewed Products ─────────────────────────────────────────────────
+  const addRecentlyViewed = (product) => {
+    if (!product || !product.id) return;
+    setRecentlyViewed((prev) => {
+      const filtered = prev.filter((p) => String(p.id) !== String(product.id));
+      return [product, ...filtered].slice(0, 10);
+    });
+  };
+
+  const clearRecentlyViewed = () => {
+    setRecentlyViewed([]);
+    localStorage.removeItem("cartify_recently_viewed");
+    addToast("Browsing history cleared.", "info");
+  };
+
+  // ─── Multi-Address Book Management ───────────────────────────────────────────
+  const addAddress = (addressData) => {
+    const newId = `addr_${Date.now()}`;
+    const isFirst = addresses.length === 0 || addressData.isDefault;
+
+    let updated = addresses;
+    if (isFirst) {
+      updated = updated.map((a) => ({ ...a, isDefault: false }));
+    }
+
+    const newAddr = {
+      id: newId,
+      tag: addressData.tag || "Home",
+      fullName: addressData.fullName || user?.name || "Customer",
+      phone: addressData.phone || user?.phone || "",
+      street: addressData.street,
+      city: addressData.city,
+      state: addressData.state || "State",
+      zip: addressData.zip,
+      country: addressData.country || "India",
+      isDefault: isFirst,
+    };
+
+    setAddresses([newAddr, ...updated]);
+    addToast("New shipping address saved! 🏠");
+    return newAddr;
+  };
+
+  const updateAddress = (id, updatedFields) => {
+    setAddresses((prev) =>
+      prev.map((a) => {
+        if (a.id === id) {
+          return { ...a, ...updatedFields };
+        }
+        if (updatedFields.isDefault) {
+          return { ...a, isDefault: false };
+        }
+        return a;
+      })
+    );
+    addToast("Address updated successfully! 💾");
+  };
+
+  const deleteAddress = (id) => {
+    setAddresses((prev) => {
+      const filtered = prev.filter((a) => a.id !== id);
+      if (filtered.length > 0 && !filtered.some((a) => a.isDefault)) {
+        filtered[0].isDefault = true;
+      }
+      return filtered;
+    });
+    addToast("Address removed.", "info");
+  };
+
+  const setDefaultAddress = (id) => {
+    setAddresses((prev) =>
+      prev.map((a) => ({
+        ...a,
+        isDefault: a.id === id,
+      }))
+    );
+    addToast("Default shipping address updated! ⭐");
+  };
+
+  const getDefaultAddress = () => {
+    return addresses.find((a) => a.isDefault) || addresses[0] || null;
   };
 
   // ─── Promo Codes ──────────────────────────────────────────────────────────────
   const applyPromoCode = (code) => {
-    const cleanCode = code.trim().toUpperCase();
+    const cleanCode = (code || "").trim().toUpperCase();
     if (cleanCode === "CARTIFY10" || cleanCode === "SAVE10") {
-      setDiscountPercent(10);
       setDiscountCode(cleanCode);
+      setDiscountPercent(10);
       addToast("10% Discount applied! 🎉");
       return { success: true, message: "10% Discount applied!" };
     } else if (cleanCode === "CARTIFY20" || cleanCode === "SAVE20") {
-      setDiscountPercent(20);
       setDiscountCode(cleanCode);
+      setDiscountPercent(20);
       addToast("20% Discount applied! 🎉");
       return { success: true, message: "20% Discount applied!" };
     } else {
@@ -314,6 +424,17 @@ export function CartProvider({ children }) {
         toggleWishlist,
         isInWishlist,
         moveToCartFromWishlist,
+        // Recently Viewed
+        recentlyViewed,
+        addRecentlyViewed,
+        clearRecentlyViewed,
+        // Multi-Address Book
+        addresses,
+        addAddress,
+        updateAddress,
+        deleteAddress,
+        setDefaultAddress,
+        getDefaultAddress,
         // UI
         searchQuery,
         setSearchQuery,
@@ -323,8 +444,8 @@ export function CartProvider({ children }) {
         addToast,
         removeToast,
         // Promo
-        discountPercent,
         discountCode,
+        discountPercent,
         applyPromoCode,
       }}
     >

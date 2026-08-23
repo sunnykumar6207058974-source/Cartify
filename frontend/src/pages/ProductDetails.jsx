@@ -3,6 +3,8 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import ProductCard from "../components/ProductCard";
+import ProductReviews from "../components/ProductDetails/ProductReviews";
+import RecentlyViewed from "../components/Common/RecentlyViewed";
 import { CartContext } from "../context/CartContext";
 import productsData from "../data/products";
 import { getProducts } from "../services/api";
@@ -10,7 +12,13 @@ import { getProducts } from "../services/api";
 function ProductDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart, toggleWishlist, isInWishlist, addToast } = useContext(CartContext);
+  const {
+    addToCart,
+    toggleWishlist,
+    isInWishlist,
+    addRecentlyViewed,
+    addToast,
+  } = useContext(CartContext);
 
   const [product, setProduct] = useState(null);
   const [allProducts, setAllProducts] = useState(productsData);
@@ -24,26 +32,8 @@ function ProductDetails() {
   // Image Zoom Lens coordinates state
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50, isHovering: false });
 
-  // Interactive Review Form state
-  const [reviewsList, setReviewsList] = useState([
-    {
-      id: 1,
-      name: "Alex M.",
-      rating: 5,
-      date: "August 2, 2026",
-      comment: "Absolutely thrilled with this purchase! High quality, super fast shipping, and exceptional packaging.",
-    },
-    {
-      id: 2,
-      name: "Sophia R.",
-      rating: 5,
-      date: "July 29, 2026",
-      comment: "Worth every penny! Exactly as described. I will definitely be ordering from Cartify again.",
-    },
-  ]);
-  const [newReviewName, setNewReviewName] = useState("");
-  const [newReviewComment, setNewReviewComment] = useState("");
-  const [newReviewRating, setNewReviewRating] = useState(5);
+  // Bundle offer state
+  const [bundleAdded, setBundleAdded] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -56,9 +46,22 @@ function ProductDetails() {
       if (target) {
         setProduct(target);
         setSelectedImage(target.image);
+        addRecentlyViewed(target);
         // Default color & size based on category
-        setSelectedColor(target.category === "Shoes" ? "Stealth Black" : target.category === "Watches" ? "Midnight Silver" : "Matte Black");
-        setSelectedSize(target.category === "Shoes" ? "US 10" : target.category === "Apparel" ? "L" : "Standard 44mm");
+        setSelectedColor(
+          target.category === "Shoes"
+            ? "Stealth Black"
+            : target.category === "Watches"
+            ? "Midnight Silver"
+            : "Matte Black"
+        );
+        setSelectedSize(
+          target.category === "Shoes"
+            ? "US 10"
+            : target.category === "Apparel"
+            ? "L"
+            : "Standard 44mm"
+        );
       } else {
         setProduct(null);
       }
@@ -107,11 +110,12 @@ function ProductDetails() {
 
   // Options arrays
   const colorsList = ["Matte Black", "Midnight Blue", "Cyber Silver", "Neon Orange"];
-  const sizesList = product.category === "Shoes" 
-    ? ["US 8", "US 9", "US 10", "US 11"]
-    : product.category === "Watches" || product.category === "Electronics"
-    ? ["38mm", "42mm", "44mm", "48mm"]
-    : ["S", "M", "L", "XL"];
+  const sizesList =
+    product.category === "Shoes"
+      ? ["US 8", "US 9", "US 10", "US 11"]
+      : product.category === "Watches" || product.category === "Electronics"
+      ? ["38mm", "42mm", "44mm", "48mm"]
+      : ["S", "M", "L", "XL"];
 
   // Handle Zoom Lens Hover
   const handleMouseMove = (e) => {
@@ -127,33 +131,28 @@ function ProductDetails() {
 
   const isWishlisted = isInWishlist(product.id);
 
-  // 6. Add to Cart with Options
+  // Add to Cart with Options
   const handleAddToCart = () => {
     addToCart({ ...product, color: selectedColor, size: selectedSize }, quantity);
   };
 
-  // 7. Buy Now Button Handler
+  // Buy Now Button Handler
   const handleBuyNow = () => {
     addToCart({ ...product, color: selectedColor, size: selectedSize }, quantity);
     navigate("/checkout");
   };
 
-  // Add New Customer Review
-  const handleAddReview = (e) => {
-    e.preventDefault();
-    if (newReviewName && newReviewComment) {
-      const newEntry = {
-        id: Date.now(),
-        name: newReviewName,
-        rating: newReviewRating,
-        date: "Just now",
-        comment: newReviewComment,
-      };
-      setReviewsList([newEntry, ...reviewsList]);
-      setNewReviewName("");
-      setNewReviewComment("");
-      addToast("Review submitted successfully! Thank you ⭐");
-    }
+  // Bundle item (matching accessory from another category)
+  const bundleCompanion = allProducts.find((p) => p.id !== product.id && p.category !== product.category) || allProducts[0];
+  const bundleCombinedPrice = Math.round((product.price + (bundleCompanion?.price || 49)) * 0.85);
+  const bundleSavings = (product.price + (bundleCompanion?.price || 49)) - bundleCombinedPrice;
+
+  const handleAddBundleToCart = () => {
+    addToCart(product, 1);
+    if (bundleCompanion) addToCart(bundleCompanion, 1);
+    setBundleAdded(true);
+    addToast("Bundle added to cart with 15% discount! 🎉");
+    setTimeout(() => setBundleAdded(false), 2000);
   };
 
   const relatedProducts = allProducts
@@ -167,16 +166,19 @@ function ProductDetails() {
         <div className="details-container container">
           {/* Breadcrumb Navigation */}
           <div className="breadcrumb">
-            <Link to="/">Home</Link> &gt; <Link to="/products">Catalog</Link> &gt; <Link to={`/category/${product.category.toLowerCase()}`}>{product.category}</Link> &gt;{" "}
+            <Link to="/">Home</Link> &gt; <Link to="/products">Catalog</Link> &gt;{" "}
+            <Link to={`/category/${product.category.toLowerCase()}`}>{product.category}</Link> &gt;{" "}
             <strong>{product.name}</strong>
           </div>
 
-          <button className="back-btn" onClick={() => navigate(-1)}>
-            ← Back to Browsing
-          </button>
+          <div className="details-top-nav-row">
+            <button className="back-btn" onClick={() => navigate(-1)}>
+              ← Back to Browsing
+            </button>
+          </div>
 
           <div className="details-grid">
-            {/* Left: 1. Multiple Images Gallery + 2. Hover Zoom Lens */}
+            {/* Left: Multiple Images Gallery + Hover Zoom Lens */}
             <div className="details-gallery-col">
               {/* Main Image with Zoom Lens */}
               <div
@@ -224,7 +226,7 @@ function ProductDetails() {
               <div className="details-rating-row">
                 <span className="stars">{"★".repeat(Math.round(product.rating || 5))}</span>
                 <span className="rating-score">{product.rating || 4.9}</span>
-                <span className="reviews-text">({reviewsList.length + 84} verified reviews)</span>
+                <span className="reviews-text">({product.reviewsCount || 48} verified reviews)</span>
               </div>
 
               {/* Price & Stock */}
@@ -233,7 +235,7 @@ function ProductDetails() {
                 {product.originalPrice && (
                   <span className="price-old">${product.originalPrice}</span>
                 )}
-                <span className="stock-tag">In Stock & Ready to Ship ⚡</span>
+                <span className="stock-tag">In Stock &amp; Ready to Ship ⚡</span>
               </div>
 
               <p className="details-summary">
@@ -241,9 +243,11 @@ function ProductDetails() {
                   "Engineered with premium materials for maximum durability, everyday style, and peak performance."}
               </p>
 
-              {/* 3. Color Selection Swatches */}
+              {/* Color Selection Swatches */}
               <div className="option-selection-group">
-                <label className="option-label">Color Variant: <strong>{selectedColor}</strong></label>
+                <label className="option-label">
+                  Color Variant: <strong>{selectedColor}</strong>
+                </label>
                 <div className="color-swatches-row">
                   {colorsList.map((c) => (
                     <button
@@ -252,18 +256,29 @@ function ProductDetails() {
                       className={`color-pill ${selectedColor === c ? "active-color" : ""}`}
                       onClick={() => setSelectedColor(c)}
                     >
-                      <span className="color-dot" style={{
-                        background: c.includes("Black") ? "#1e293b" : c.includes("Blue") ? "#2563eb" : c.includes("Silver") ? "#94a3b8" : "#f97316"
-                      }}></span>
+                      <span
+                        className="color-dot"
+                        style={{
+                          background: c.includes("Black")
+                            ? "#1e293b"
+                            : c.includes("Blue")
+                            ? "#2563eb"
+                            : c.includes("Silver")
+                            ? "#94a3b8"
+                            : "#f97316",
+                        }}
+                      ></span>
                       <span>{c}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* 4. Size Selection Pills */}
+              {/* Size Selection Pills */}
               <div className="option-selection-group">
-                <label className="option-label">Size Options: <strong>{selectedSize}</strong></label>
+                <label className="option-label">
+                  Size Options: <strong>{selectedSize}</strong>
+                </label>
                 <div className="size-pills-row">
                   {sizesList.map((s) => (
                     <button
@@ -278,7 +293,7 @@ function ProductDetails() {
                 </div>
               </div>
 
-              {/* 5. Quantity Selector & 6. Add to Cart / 7. Buy Now */}
+              {/* Quantity Selector & Actions */}
               <div className="details-actions-wrapper">
                 <div className="quantity-selector">
                   <label className="option-label">Quantity:</label>
@@ -290,7 +305,6 @@ function ProductDetails() {
                 </div>
 
                 <div className="button-group-row">
-                  {/* 6. Add to Cart Button */}
                   <button
                     className="btn-primary add-to-cart-large"
                     onClick={handleAddToCart}
@@ -298,7 +312,6 @@ function ProductDetails() {
                     Add {quantity} to Cart 🛒
                   </button>
 
-                  {/* 7. Buy Now Button */}
                   <button
                     className="btn-accent buy-now-btn"
                     onClick={handleBuyNow}
@@ -343,7 +356,46 @@ function ProductDetails() {
             </div>
           </div>
 
-          {/* Product Tabs & 8. Customer Reviews */}
+          {/* Frequently Bought Together Bundle Card */}
+          {bundleCompanion && (
+            <div className="bundle-deal-card margin-y-lg animate-fade-in">
+              <div className="bundle-header">
+                <span className="bundle-tag">🔥 FREQUENTLY BOUGHT TOGETHER</span>
+                <h3>Save 15% with this matching smart bundle</h3>
+              </div>
+              <div className="bundle-content-flex">
+                <div className="bundle-items-visual">
+                  <div className="bundle-single-item">
+                    <img src={product.image} alt={product.name} />
+                    <span>{product.name}</span>
+                    <strong>${product.price}</strong>
+                  </div>
+                  <span className="bundle-plus-icon">+</span>
+                  <div className="bundle-single-item">
+                    <img src={bundleCompanion.image} alt={bundleCompanion.name} />
+                    <span>{bundleCompanion.name}</span>
+                    <strong>${bundleCompanion.price}</strong>
+                  </div>
+                </div>
+                <div className="bundle-pricing-action">
+                  <div className="bundle-price-details">
+                    <span className="bundle-total-label">Bundle Price:</span>
+                    <span className="bundle-final-price">${bundleCombinedPrice}</span>
+                    <span className="bundle-old-total">${product.price + bundleCompanion.price}</span>
+                    <span className="bundle-savings-badge">Save ${bundleSavings} (15% OFF)</span>
+                  </div>
+                  <button
+                    className={`btn-primary bundle-add-btn ${bundleAdded ? "added" : ""}`}
+                    onClick={handleAddBundleToCart}
+                  >
+                    {bundleAdded ? "Bundle Added! ✓" : "Add Both to Cart 🛍️"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Product Tabs & Customer Reviews */}
           <div className="details-tabs-container">
             <div className="tabs-header">
               <button
@@ -362,22 +414,40 @@ function ProductDetails() {
                 className={activeTab === "reviews" ? "active" : ""}
                 onClick={() => setActiveTab("reviews")}
               >
-                Customer Reviews ({reviewsList.length})
+                Customer Reviews &amp; Ratings ⭐
               </button>
             </div>
 
             <div className="tab-body">
               {activeTab === "description" && (
                 <div className="tab-content-box">
-                  <h3>Product Overview</h3>
+                  <h3>Product Overview &amp; Key Features</h3>
                   <p>
                     Experience unmatched quality with the {product.name}. Crafted precisely for perfection, this product seamlessly combines elegant design with industry-leading features.
                   </p>
-                  <ul>
-                    <li>Premium build quality tested to rigorous international standards.</li>
-                    <li>Ergonomic design ensuring maximum usability and daily efficiency.</li>
-                    <li>Sleek aesthetic profile matching modern lifestyle trends.</li>
-                  </ul>
+                  <div className="features-bullets-grid">
+                    <div className="feature-bullet-item">
+                      <span className="bullet-icon">✨</span>
+                      <div>
+                        <strong>Aerospace-Grade Materials</strong>
+                        <p>Constructed with durable high-resilience components tested for long-lasting performance.</p>
+                      </div>
+                    </div>
+                    <div className="feature-bullet-item">
+                      <span className="bullet-icon">⚡</span>
+                      <div>
+                        <strong>Ergonomic Comfort</strong>
+                        <p>Engineered for lightweight daily wear, comfort, and all-day satisfaction.</p>
+                      </div>
+                    </div>
+                    <div className="feature-bullet-item">
+                      <span className="bullet-icon">🛡️</span>
+                      <div>
+                        <strong>Weather &amp; Water Resistant</strong>
+                        <p>Built to handle outdoor conditions, daily commutes, and active workouts.</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -388,7 +458,7 @@ function ProductDetails() {
                     <tbody>
                       <tr>
                         <td>Brand</td>
-                        <td>Cartify Certified</td>
+                        <td>Cartify Certified Premium</td>
                       </tr>
                       <tr>
                         <td>Category</td>
@@ -404,79 +474,29 @@ function ProductDetails() {
                       </tr>
                       <tr>
                         <td>Warranty</td>
-                        <td>2 Years International</td>
+                        <td>2 Years Full Replacement Guarantee</td>
+                      </tr>
+                      <tr>
+                        <td>Package Contents</td>
+                        <td>Product, Quick Guide, Certificate of Authenticity</td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
               )}
 
-              {/* 8. Customer Reviews & Interactive Submission */}
+              {/* Customer Reviews Component */}
               {activeTab === "reviews" && (
-                <div className="tab-content-box">
-                  <div className="reviews-header-summary">
-                    <div>
-                      <h3>Customer Reviews & Ratings</h3>
-                      <div className="overall-rating-badge">
-                        <span className="score">4.9</span>
-                        <span className="stars">★★★★★</span>
-                        <span>Based on {reviewsList.length + 84} ratings</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="reviews-list">
-                    {reviewsList.map((rev) => (
-                      <div key={rev.id} className="review-card">
-                        <div className="review-header">
-                          <strong>{rev.name} <span className="verified-tag">✓ Verified Buyer</span></strong>
-                          <span className="stars">{"★".repeat(rev.rating)}</span>
-                        </div>
-                        <span className="review-date">{rev.date}</span>
-                        <p className="review-comment">{rev.comment}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Add Review Form */}
-                  <form onSubmit={handleAddReview} className="add-review-form">
-                    <h4>Write a Review</h4>
-                    <div className="form-group-inline">
-                      <input
-                        type="text"
-                        placeholder="Your Name"
-                        value={newReviewName}
-                        onChange={(e) => setNewReviewName(e.target.value)}
-                        required
-                      />
-                      <select
-                        value={newReviewRating}
-                        onChange={(e) => setNewReviewRating(Number(e.target.value))}
-                      >
-                        <option value="5">5 Stars ★★★★★</option>
-                        <option value="4">4 Stars ★★★★☆</option>
-                        <option value="3">3 Stars ★★★☆☆</option>
-                      </select>
-                    </div>
-                    <textarea
-                      rows="3"
-                      placeholder="Write your feedback about this product..."
-                      value={newReviewComment}
-                      onChange={(e) => setNewReviewComment(e.target.value)}
-                      required
-                    ></textarea>
-                    <button type="submit" className="btn-primary">
-                      Submit Review ⭐
-                    </button>
-                  </form>
+                <div className="tab-content-box reviews-tab-wrapper">
+                  <ProductReviews productId={product.id} productName={product.name} />
                 </div>
               )}
             </div>
           </div>
 
-          {/* 9. Related Products */}
+          {/* Related Products */}
           {relatedProducts.length > 0 && (
-            <div className="related-products-section">
+            <div className="related-products-section margin-y-lg">
               <h2>You Might Also Like</h2>
               <div className="products-grid">
                 {relatedProducts.map((relProd) => (
@@ -485,6 +505,9 @@ function ProductDetails() {
               </div>
             </div>
           )}
+
+          {/* Recently Viewed Products Section */}
+          <RecentlyViewed currentProductId={product.id} />
         </div>
       </main>
       <Footer />

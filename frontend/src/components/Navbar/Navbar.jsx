@@ -188,7 +188,7 @@ function Navbar() {
               {searchQuery.trim().length > 0 ? (
                 searchSuggestions.length > 0 ? (
                   <>
-                    <div className="suggestions-header">Matching Products & Categories</div>
+                    <div className="suggestions-header">Matching Products &amp; Categories</div>
                     <div className="suggestions-list">
                       {searchSuggestions.map((item) => (
                         <div
@@ -268,7 +268,7 @@ function Navbar() {
             className={location.pathname === "/orders" ? "active" : ""}
             onClick={() => setMobileOpen(false)}
           >
-            📦 My Orders
+            📦 Orders
           </Link>
           <Link
             to="/wishlist"
@@ -279,18 +279,11 @@ function Navbar() {
             {wishlistCount > 0 && <span className="nav-badge-inline">{wishlistCount}</span>}
           </Link>
           <Link
-            to="/about"
-            className={location.pathname === "/about" ? "active" : ""}
-            onClick={() => setMobileOpen(false)}
-          >
-            ℹ️ About
-          </Link>
-          <Link
             to="/admin"
             className={`admin-drawer-link ${location.pathname.startsWith("/admin") ? "active" : ""}`}
             onClick={() => setMobileOpen(false)}
           >
-            ⚡ Admin Panel
+            ⚡ Admin
           </Link>
         </nav>
 
@@ -299,7 +292,7 @@ function Navbar() {
           {/* Dedicated Admin Panel Quick Button (Always Visible) */}
           <Link to="/admin" className="admin-nav-distinct-btn" title="Open Admin Control Panel">
             <span className="admin-btn-icon">⚡</span>
-            <span className="admin-btn-text">Admin Panel</span>
+            <span className="admin-btn-text">Admin</span>
           </Link>
 
           {/* Account Profile Menu */}
@@ -337,14 +330,14 @@ function Navbar() {
                     className="dropdown-item"
                     onClick={() => setAccountDropdownOpen(false)}
                   >
-                    <span className="item-icon">👤</span> My Profile / Account
+                    <span className="item-icon">👤</span> My Profile &amp; Addresses
                   </Link>
                   <Link
                     to="/orders"
                     className="dropdown-item"
                     onClick={() => setAccountDropdownOpen(false)}
                   >
-                    <span className="item-icon">📦</span> My Orders & History
+                    <span className="item-icon">📦</span> My Orders &amp; History
                   </Link>
                   <Link
                     to="/wishlist"
@@ -405,12 +398,10 @@ function Navbar() {
       </div>
     </header>
 
-    {/* Flipkart / Amazon App style Mobile Bottom Navigation Bar (Fixed at absolute bottom of viewport) */}
+    {/* Flipkart / Amazon App style Mobile Bottom Navigation Bar */}
     <MobileBottomNav />
     </>
   );
 }
 
 export default Navbar;
-
-

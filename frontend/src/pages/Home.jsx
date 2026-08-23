@@ -6,6 +6,7 @@ import FeaturedProducts from "../components/FeaturedProducts";
 import ProductSection from "../components/ProductSections";
 import FlashSale from "../components/FlashSale";
 import Testimonials from "../components/Testimonials";
+import RecentlyViewed from "../components/Common/RecentlyViewed";
 import Footer from "../components/Footer";
 
 function Home() {
@@ -71,13 +72,16 @@ function Home() {
           />
         </div>
 
-        {/* 9. Customer Reviews */}
+        {/* 9. Recently Viewed Products History */}
+        <RecentlyViewed />
+
+        {/* 10. Customer Reviews */}
         <div className="container">
           <Testimonials />
         </div>
       </main>
 
-      {/* 10. Footer */}
+      {/* 11. Footer */}
       <Footer />
     </div>
   );
