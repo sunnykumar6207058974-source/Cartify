@@ -13,7 +13,7 @@ function Home() {
   const [activeCategory, setActiveCategory] = useState("All");
 
   useEffect(() => {
-    document.title = "Cartify — Premium E-Commerce Shopping";
+    document.title = "Cartify - Store | Official Online Shopping Store";
   }, []);
 
   const handleSelectCategory = (catName) => {
