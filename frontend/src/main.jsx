@@ -15,3 +15,12 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     </BrowserRouter>
   </StrictMode>
 );
+
+// Register PWA Service Worker for Mobile Installation & Offline Icons
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("/sw.js")
+      .catch((err) => console.log("SW registration notice:", err));
+  });
+}

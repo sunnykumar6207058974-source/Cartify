@@ -148,7 +148,7 @@ function Navbar() {
       <div className="navbar-container">
         {/* Brand Logo */}
         <Link to="/" className="navbar-brand" onClick={() => setMobileOpen(false)}>
-          <div className="logo-icon">⚡</div>
+          <img src="/favicon.svg" alt="Cartify Logo" className="navbar-brand-logo" />
           <span className="logo-text">Cart<span>ify</span></span>
         </Link>
 
@@ -285,6 +285,17 @@ function Navbar() {
           >
             ⚡ Admin
           </Link>
+          <button
+            type="button"
+            className="download-app-nav-btn"
+            onClick={() => {
+              setMobileOpen(false);
+              window.dispatchEvent(new CustomEvent("open-cartify-install"));
+            }}
+            title="Download & Install Cartify App on your phone"
+          >
+            📲 Install App
+          </button>
         </nav>
 
         {/* Right Top Actions: Profile Account, Theme Toggle, Cart */}

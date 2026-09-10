@@ -22,12 +22,28 @@ function Footer() {
         {/* Brand & Newsletter & 6. Social Icons Column */}
         <div className="footer-col brand-col">
           <div className="footer-logo">
-            <span className="logo-icon">⚡</span>
+            <img src="/favicon.svg" alt="Cartify Logo" className="navbar-brand-logo" />
             <span className="logo-text">Cart<span>ify</span></span>
           </div>
           <p className="footer-desc">
             Your destination for premium shoes, luxury watches, high-tech electronics, and fashion accessories.
           </p>
+
+          {/* Download Cartify App Button */}
+          <div className="footer-app-badge-box">
+            <button
+              type="button"
+              className="footer-pwa-badge"
+              onClick={() => window.dispatchEvent(new CustomEvent("open-cartify-install"))}
+              title="Install Cartify on your mobile phone"
+            >
+              <img src="/icon-192.png" alt="Cartify App" className="footer-pwa-icon" />
+              <div className="footer-pwa-details">
+                <span className="footer-pwa-sub">EXPERIENCE MOBILE APP</span>
+                <span className="footer-pwa-title">Download Cartify App</span>
+              </div>
+            </button>
+          </div>
 
           {/* 6. Interactive Social Icons */}
           <div className="footer-social-icons">
