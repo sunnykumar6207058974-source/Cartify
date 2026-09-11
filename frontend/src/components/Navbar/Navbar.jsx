@@ -146,6 +146,21 @@ function Navbar() {
 
   return (
     <>
+      {/* Top Welcoming Announcement Strip */}
+      <div className="navbar-top-welcome-bar">
+        <div className="top-welcome-inner">
+          {user && user.isLoggedIn ? (
+            <span className="welcome-message-text">
+              ✨ <strong>Welcome back, {user.name.split(" ")[0]}!</strong> Enjoy VIP Priority Shipping &amp; 5% Cashback on today's orders 🛍️
+            </span>
+          ) : (
+            <span className="welcome-message-text">
+              🎁 <strong>Welcome to Cartify Luxury!</strong> Use code <span className="welcome-promo-code">WELCOME50</span> for $50 OFF on your first purchase • Free 24h Dispatch 🚀
+            </span>
+          )}
+        </div>
+      </div>
+
       <header className={`navbar-header flipkart-style-header ${isScrolled ? "sticky-scrolled" : ""}`}>
       <div className="navbar-container">
         {/* Brand Logo */}
@@ -320,7 +335,7 @@ function Navbar() {
                 onClick={() => setAccountDropdownOpen(!accountDropdownOpen)}
               >
                 <img src={user.avatar} alt="User Avatar" className="nav-user-avatar" />
-                <span className="nav-user-name">{user.name.split(" ")[0]}</span>
+                <span className="nav-user-name">Welcome, {user.name.split(" ")[0]}</span>
                 <span className="dropdown-arrow">▼</span>
               </button>
 

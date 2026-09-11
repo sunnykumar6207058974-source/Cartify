@@ -2592,14 +2592,57 @@ body.dark-theme .in-cart-status-badge {
    12. TOAST NOTIFICATIONS & MODALS
    ========================================================================== */
 
+/* Top Welcoming & Announcement Bar */
+.navbar-top-welcome-bar {
+  background: linear-gradient(90deg, #4338ca 0%, #6366f1 50%, #7c3aed 100%);
+  background-size: 200% auto;
+  animation: gradientShimmer 6s linear infinite;
+  color: #ffffff;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 6px 16px;
+  text-align: center;
+  letter-spacing: 0.2px;
+  position: relative;
+  z-index: 1001;
+}
+
+@keyframes gradientShimmer {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+.top-welcome-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.welcome-promo-code {
+  background: rgba(255, 255, 255, 0.22);
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  border: 1px dashed rgba(255, 255, 255, 0.5);
+}
+
 .toast-container {
   position: fixed;
   bottom: 24px;
   right: 24px;
-  z-index: 2000;
+  z-index: 99999 !important;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
 }
 
 .toast {

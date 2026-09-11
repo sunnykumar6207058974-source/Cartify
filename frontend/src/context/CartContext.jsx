@@ -175,7 +175,7 @@ export function CartProvider({ children }) {
     };
     setUser(newUser);
     if (token) setAuthToken(token);
-    addToast(`Signed in as ${newUser.name}! 👋`);
+    addToast(`🎉 Welcome to Cartify, ${newUser.name}! Glad to have you here! 👋`, "success");
   };
 
   const updateUser = (fields) => {
@@ -223,7 +223,7 @@ export function CartProvider({ children }) {
     setToasts((prev) => [...prev, { id, message, type }]);
     setTimeout(() => {
       removeToast(id);
-    }, 3000);
+    }, 4500);
   };
 
   // ─── Cart ─────────────────────────────────────────────────────────────────────

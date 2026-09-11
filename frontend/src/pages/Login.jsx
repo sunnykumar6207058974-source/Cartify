@@ -144,7 +144,6 @@ function Login() {
           isLoggedIn: true,
         };
         loginUser(formattedUser);
-        addToast("Signed in successfully via OTP! 🎉", "success");
         navigate(from, { replace: true });
       } else {
         setError("Invalid OTP code. Please enter 1234 (demo code).");
