@@ -203,8 +203,9 @@ function Cart() {
               </div>
             </div>
 
-            <Link to="/checkout" className="btn-primary checkout-btn-block">
-              Proceed to Checkout 🔒
+            <Link to="/checkout" className="checkout-btn-block">
+              <span>Proceed to Checkout 🔒</span>
+              <span className="checkout-btn-arrow">➔</span>
             </Link>
 
             <div className="secure-badge-footer">
