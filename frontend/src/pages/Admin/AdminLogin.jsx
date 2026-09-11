@@ -76,7 +76,9 @@ function AdminLogin() {
 
         <div className="admin-login-frost-card">
           <div className="admin-login-header">
-            <div className="admin-login-icon-box">⚡</div>
+            <div className="admin-login-icon-box">
+              <img src="/logo.png" alt="Cartify Logo" className="admin-login-logo-img" />
+            </div>
             <h2>Cartify Control Console</h2>
             <p className="admin-login-subtitle">
               Secure Apple Pro Administrator Gateway. Authenticate to manage inventory, fulfill customer orders, and view live store telemetry.

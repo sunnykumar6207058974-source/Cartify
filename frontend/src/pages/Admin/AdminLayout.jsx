@@ -39,7 +39,7 @@ function AdminLayout() {
       <aside className={`admin-sidebar ${sidebarOpen ? "open" : ""}`}>
         <div className="admin-sidebar-header">
           <Link to="/" className="admin-brand">
-            <div className="admin-logo-icon">⚡</div>
+            <img src="/logo.png" alt="Cartify Logo" className="admin-brand-logo" />
             <div className="admin-brand-text">
               <span>Cart<span>ify</span></span>
               <span className="admin-badge-pill">ADMIN</span>
