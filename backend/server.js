@@ -14,6 +14,7 @@ import productsRouter from "./routes/products.js";
 import ordersRouter from "./routes/orders.js";
 import authRouter from "./routes/auth.js";
 import analyticsRouter from "./routes/analytics.js";
+import paymentRouter from "./routes/payment.js";
 
 const app = express();
 const PORT = process.env.PORT || 5002;
@@ -61,6 +62,7 @@ app.use("/api/products", productsRouter);
 app.use("/api/orders", ordersRouter);
 app.use("/api/auth", authLimiter, authRouter);
 app.use("/api/analytics", analyticsRouter);
+app.use("/api/payment", paymentRouter);
 
 // ─── Health Check ─────────────────────────────────────────────────────────────
 app.get("/", (req, res) => {

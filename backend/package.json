@@ -16,6 +16,7 @@
     "express-rate-limit": "^8.6.2",
     "jsonwebtoken": "^9.0.3",
     "nodemailer": "^9.0.3",
+    "razorpay": "^2.9.8",
     "twilio": "^6.1.0"
   }
 }
