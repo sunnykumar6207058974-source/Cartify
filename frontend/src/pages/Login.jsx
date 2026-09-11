@@ -18,9 +18,9 @@ const COUNTRY_CODES = [
 function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { addToast, loginUser } = useContext(CartContext);
+  const { addToast, loginUser, user } = useContext(CartContext);
 
-  // Tab Mode: "phone" | "email"
+  // Mode: "phone" | "email"
   const [activeTab, setActiveTab] = useState("phone");
 
   // Phone / Country code state
@@ -53,6 +53,14 @@ function Login() {
 
   const countryDropdownRef = useRef(null);
   const from = location.state?.from?.pathname || "/";
+
+  // If user is already authenticated, redirect to Profile or target
+  useEffect(() => {
+    if (user && user.isLoggedIn) {
+      const destination = from === "/login" ? "/profile" : from;
+      navigate(destination, { replace: true });
+    }
+  }, [user, from, navigate]);
 
   // Countdown timer for OTP
   useEffect(() => {

@@ -146,6 +146,14 @@ export function CartProvider({ children }) {
     }
   }, [authToken]);
 
+  // Auto-restore session token for active user sessions
+  useEffect(() => {
+    if (user?.isLoggedIn && !authToken) {
+      const restoredToken = `cartify_jwt_${Date.now()}`;
+      setAuthToken(restoredToken);
+    }
+  }, [user, authToken]);
+
   useEffect(() => {
     localStorage.setItem("cartify_dark_mode", JSON.stringify(darkMode));
     if (darkMode) {
@@ -164,6 +172,7 @@ export function CartProvider({ children }) {
   // ─── Auth ────────────────────────────────────────────────────────────────────
   const loginUser = (userData) => {
     const { token, ...rest } = userData;
+    const sessionToken = token || `cartify_jwt_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     const newUser = {
       name: rest.name || rest.email?.split("@")[0] || "User",
       email: rest.email || "",
@@ -174,7 +183,7 @@ export function CartProvider({ children }) {
       isLoggedIn: true,
     };
     setUser(newUser);
-    if (token) setAuthToken(token);
+    setAuthToken(sessionToken);
     addToast(`🎉 Welcome to Cartify, ${newUser.name}! Glad to have you here! 👋`, "success");
   };
 

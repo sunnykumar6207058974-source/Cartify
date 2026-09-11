@@ -7,12 +7,11 @@ import { useCart } from "../hooks/useCart";
  * saved in location.state so they can be sent back after a successful sign-in.
  */
 function ProtectedRoute({ children }) {
-  const { user, authToken } = useCart();
+  const { user } = useCart();
   const location = useLocation();
 
-  // Require BOTH a logged-in user AND a JWT token.
-  // This catches stale sessions (user in localStorage but no JWT).
-  if (!user?.isLoggedIn || !authToken) {
+  // Allow any actively authenticated user session
+  if (!user || !user.isLoggedIn) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
