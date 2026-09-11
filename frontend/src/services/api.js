@@ -395,7 +395,7 @@ export async function createRazorpayOrder(amount, currency = "INR", receipt = ""
       amount: Math.round(Number(amount) * 100),
       currency: currency.toUpperCase(),
     },
-    keyId: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_cartify_demo",
+    keyId: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_TalrCcrimLSWSz",
     isSandbox: true,
   };
 }

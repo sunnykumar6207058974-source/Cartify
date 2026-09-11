@@ -201,7 +201,7 @@ function Checkout() {
 
         if (typeof window.Razorpay === "function") {
           const options = {
-            key: orderData.keyId || import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_cartify_demo",
+            key: orderData.keyId || import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_TalrCcrimLSWSz",
             amount: orderData.order.amount,
             currency: orderData.order.currency || "INR",
             name: "Cartify Luxury Store",
