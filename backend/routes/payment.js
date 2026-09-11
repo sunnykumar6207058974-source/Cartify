@@ -4,10 +4,10 @@ import crypto from "crypto";
 
 const router = express.Router();
 
-// Initialize Razorpay instance if keys are provided
+// Initialize Razorpay instance with environment or test credentials
 const getRazorpayInstance = () => {
-  const key_id = process.env.RAZORPAY_KEY_ID;
-  const key_secret = process.env.RAZORPAY_KEY_SECRET;
+  const key_id = process.env.RAZORPAY_KEY_ID || "rzp_test_TalrCcrimLSWSz";
+  const key_secret = process.env.RAZORPAY_KEY_SECRET || "Z2o3y5SIb396OhKiPOJqhrFa";
 
   if (key_id && key_secret) {
     return new Razorpay({ key_id, key_secret });
@@ -47,8 +47,8 @@ router.post("/create-order", async (req, res) => {
       return res.json({
         success: true,
         order: razorpayOrder,
-        keyId: process.env.RAZORPAY_KEY_ID,
-        isSandbox: !process.env.RAZORPAY_KEY_ID?.startsWith("rzp_live_"),
+        keyId: process.env.RAZORPAY_KEY_ID || "rzp_test_TalrCcrimLSWSz",
+        isSandbox: !(process.env.RAZORPAY_KEY_ID || "rzp_test_TalrCcrimLSWSz")?.startsWith("rzp_live_"),
       });
     } else {
       // Sandbox / Test fallback when keys are being set up
@@ -97,7 +97,7 @@ router.post("/verify-payment", async (req, res) => {
       });
     }
 
-    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET || "Z2o3y5SIb396OhKiPOJqhrFa";
 
     if (keySecret && razorpay_signature) {
       const generatedSignature = crypto

@@ -391,7 +391,7 @@ export async function createRazorpayOrder(amount, currency = "INR", receipt = ""
   return {
     success: true,
     order: {
-      id: `order_sandbox_${Date.now()}`,
+      id: null,
       amount: Math.round(Number(amount) * 100),
       currency: currency.toUpperCase(),
     },

@@ -200,14 +200,29 @@ function Checkout() {
         }
 
         if (typeof window.Razorpay === "function") {
+          const razorpayKey =
+            orderData.keyId && orderData.keyId.startsWith("rzp_") && orderData.keyId !== "rzp_test_cartify_demo"
+              ? orderData.keyId
+              : (import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_TalrCcrimLSWSz");
+
+          const isRealOrderId =
+            orderData.order?.id &&
+            typeof orderData.order.id === "string" &&
+            orderData.order.id.startsWith("order_") &&
+            !orderData.order.id.includes("mock") &&
+            !orderData.order.id.includes("sandbox");
+
+          const rawPhone = formData.phone || user?.phone || "9876543210";
+          const cleanPhone = rawPhone.replace(/[^\d]/g, "").slice(-10) || "9876543210";
+
           const options = {
-            key: orderData.keyId || import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_TalrCcrimLSWSz",
+            key: razorpayKey,
             amount: orderData.order.amount,
             currency: orderData.order.currency || "INR",
             name: "Cartify Luxury Store",
             description: `Payment for ${cart.length} item(s)`,
             image: "https://cartify-store-amber.vercel.app/logo.png",
-            order_id: orderData.order.id,
+            ...(isRealOrderId ? { order_id: orderData.order.id } : {}),
             handler: async function (response) {
               const verifyRes = await verifyRazorpayPayment(response);
               if (verifyRes.success) {
@@ -224,7 +239,7 @@ function Checkout() {
             prefill: {
               name: formData.fullName || user?.name || "Customer",
               email: formData.email || user?.email || "customer@cartify.com",
-              contact: formData.phone || user?.phone || "9999999999",
+              contact: cleanPhone,
             },
             theme: {
               color: "#4f46e5",
