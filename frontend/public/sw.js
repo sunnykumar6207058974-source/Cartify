@@ -38,18 +38,22 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  // Only handle GET requests for same-origin
   if (event.request.method !== "GET") return;
+  const url = new URL(event.request.url);
+  if (!url.protocol.startsWith("http")) return;
 
+  // Network first: always get fresh content, fall back to cache when offline
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).catch(() => {
-        // Fallback if offline
-        return caches.match("/favicon.svg");
-      });
-    })
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type === "basic") {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+        }
+        return networkResponse;
+      })
+      .catch(() => {
+        return caches.match(event.request);
+      })
   );
 });

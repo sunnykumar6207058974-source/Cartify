@@ -343,7 +343,7 @@ export async function adminLoginUser(email, password, phone) {
     }
 
     if (data.token) {
-      setToken(data.token);
+      saveToken(data.token);
     }
     return data;
   } catch (err) {
