@@ -101,21 +101,73 @@ function ProductDetails() {
     );
   }
 
-  // 1. Multiple Gallery Images Array
-  const galleryImages = [
-    product.image,
-    "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&auto=format&fit=crop&q=80",
-    "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&auto=format&fit=crop&q=80",
-    "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80",
+  // 1. Multiple Gallery Items Mapped to Corresponding Catalog Products
+  const galleryItems = [
+    {
+      productId: product.id,
+      url: product.image,
+      name: product.name,
+    },
+    ...(product.id !== 1
+      ? [{ productId: 1, url: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&auto=format&fit=crop&q=80", name: "Air Max Pro Stealth" }]
+      : [{ productId: 7, url: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=800&auto=format&fit=crop&q=80", name: "Vanguard Retro High Sneakers" }]),
+    ...(product.id !== 2
+      ? [{ productId: 2, url: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&auto=format&fit=crop&q=80", name: "Apex Series Smartwatch 5" }]
+      : [{ productId: 8, url: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=800&auto=format&fit=crop&q=80", name: "Chronos Gold Chronograph" }]),
+    ...(product.id !== 3
+      ? [{ productId: 3, url: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80", name: "SonicPro ANC Headphones" }]
+      : [{ productId: 4, url: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800&auto=format&fit=crop&q=80", name: "MacStudio Slim 14 Laptop" }]),
   ];
 
-  // Options arrays
-  const colorsList = ["Matte Black", "Midnight Blue", "Cyber Silver", "Neon Orange"];
+  const handleThumbnailClick = (item) => {
+    if (item.productId && String(item.productId) !== String(product.id)) {
+      const foundTarget =
+        allProducts.find((p) => String(p.id) === String(item.productId)) ||
+        productsData.find((p) => String(p.id) === String(item.productId));
+      if (foundTarget) {
+        setProduct(foundTarget);
+        setSelectedImage(foundTarget.image);
+        setSelectedColor(
+          foundTarget.category === "Shoes"
+            ? "Stealth Black"
+            : foundTarget.category === "Watches"
+            ? "Midnight Silver"
+            : "Matte Black"
+        );
+        setSelectedSize(
+          foundTarget.category === "Shoes"
+            ? "US 10"
+            : foundTarget.category === "Watches"
+            ? "44mm"
+            : "Standard"
+        );
+        setQuantity(1);
+        navigate(`/product/${foundTarget.id}`);
+        return;
+      }
+    }
+    setSelectedImage(item.url || item);
+  };
+
+  // Dynamic Options arrays matching active product's category
+  const colorsList =
+    product.colors && product.colors.length > 0
+      ? product.colors
+      : product.category === "Watches"
+      ? ["Midnight Silver", "Space Black", "Rose Gold"]
+      : product.category === "Shoes"
+      ? ["Stealth Black", "Midnight Blue", "Crimson Red"]
+      : ["Matte Black", "Midnight Blue", "Cyber Silver", "Neon Orange"];
+
   const sizesList =
-    product.category === "Shoes"
+    product.sizes && product.sizes.length > 0
+      ? product.sizes
+      : product.category === "Shoes"
       ? ["US 8", "US 9", "US 10", "US 11"]
-      : product.category === "Watches" || product.category === "Electronics"
-      ? ["38mm", "42mm", "44mm", "48mm"]
+      : product.category === "Watches"
+      ? ["40mm", "42mm", "44mm", "46mm"]
+      : product.category === "Electronics"
+      ? ["Standard Edition", "Pro Edition"]
       : ["S", "M", "L", "XL"];
 
   // Handle Zoom Lens Hover
@@ -206,13 +258,14 @@ function ProductDetails() {
 
               {/* Multiple Thumbnail Images */}
               <div className="gallery-thumbnails-row">
-                {galleryImages.map((imgUrl, idx) => (
+                {galleryItems.map((item, idx) => (
                   <div
                     key={idx}
-                    className={`thumb-box ${selectedImage === imgUrl ? "active-thumb" : ""}`}
-                    onClick={() => setSelectedImage(imgUrl)}
+                    className={`thumb-box ${selectedImage === item.url ? "active-thumb" : ""}`}
+                    onClick={() => handleThumbnailClick(item)}
+                    title={item.name ? `Switch to ${item.name}` : `Thumbnail ${idx + 1}`}
                   >
-                    <img src={imgUrl} alt={`Thumbnail ${idx + 1}`} />
+                    <img src={item.url} alt={item.name || `Thumbnail ${idx + 1}`} />
                   </div>
                 ))}
               </div>
