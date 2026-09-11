@@ -148,7 +148,7 @@ function Navbar() {
       <div className="navbar-container">
         {/* Brand Logo */}
         <Link to="/" className="navbar-brand" onClick={() => setMobileOpen(false)}>
-          <img src="/favicon.svg" alt="Cartify Logo" className="navbar-brand-logo" />
+          <img src="/logo.png" alt="Cartify Logo" className="navbar-brand-logo" />
           <span className="logo-text">Cart<span>ify</span></span>
         </Link>
 

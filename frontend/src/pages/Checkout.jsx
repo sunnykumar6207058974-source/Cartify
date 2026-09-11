@@ -201,7 +201,9 @@ function Checkout() {
             </div>
           ) : orderPlaced ? (
             <div className="order-success-card animate-scale-up">
-              <div className="success-icon">🎉</div>
+              <div className="order-success-logo-badge">
+                <img src="/logo.png" alt="Cartify Official Logo" className="order-success-brand-logo" />
+              </div>
               <h2>Order Placed Successfully!</h2>
               <p className="order-id-badge">
                 Order Reference ID: <strong>#{orderId}</strong>
@@ -215,9 +217,12 @@ function Checkout() {
               {placedOrderSummary && (
                 <div className="printable-invoice-box">
                   <div className="invoice-header">
-                    <div>
-                      <h3>⚡ Cartify Tax Invoice / Receipt</h3>
-                      <span>Invoice #{orderId} • Date: {placedOrderSummary.date}</span>
+                    <div className="invoice-brand-group">
+                      <img src="/logo.png" alt="Cartify Logo" className="invoice-logo-img" />
+                      <div>
+                        <h3>Cartify Tax Invoice / Receipt</h3>
+                        <span>Invoice #{orderId} • Date: {placedOrderSummary.date}</span>
+                      </div>
                     </div>
                     <button
                       className="btn-secondary btn-sm print-hide"

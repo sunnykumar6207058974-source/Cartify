@@ -1,79 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <defs>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0b1021" />
-      <stop offset="50%" stop-color="#0f172a" />
-      <stop offset="100%" stop-color="#1e1b4b" />
-    </linearGradient>
+  <!-- Background Badge matching user's logo -->
+  <rect width="512" height="512" rx="112" fill="#fffaf0"/>
+  <rect width="504" height="504" x="4" y="4" rx="108" fill="none" stroke="#f97316" stroke-width="4" stroke-opacity="0.25"/>
 
-    <linearGradient id="cartGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#38bdf8" />
-      <stop offset="50%" stop-color="#6366f1" />
-      <stop offset="100%" stop-color="#a855f7" />
-    </linearGradient>
-
-    <linearGradient id="bagGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#a855f7" />
-      <stop offset="50%" stop-color="#6366f1" />
-      <stop offset="100%" stop-color="#06b6d4" />
-    </linearGradient>
-
-    <linearGradient id="sparkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#38bdf8" />
-      <stop offset="100%" stop-color="#818cf8" />
-    </linearGradient>
-
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="8" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
-    </filter>
-  </defs>
-
-  <!-- Background Squircle -->
-  <rect width="512" height="512" rx="128" fill="url(#bgGrad)" />
-  <rect width="504" height="504" x="4" y="4" rx="124" fill="none" stroke="url(#cartGrad)" stroke-width="4" stroke-opacity="0.35" />
-
-  <!-- Shopping Bag inside cart -->
-  <g filter="url(#glow)">
-    <!-- Bag Handle -->
-    <path d="M216 190 V160 C216 137.9 233.9 120 256 120 C278.1 120 296 137.9 296 160 V190" 
-          fill="none" stroke="url(#bagGrad)" stroke-width="16" stroke-linecap="round" />
+  <g id="cartify-brand-mark">
+    <!-- Shopping Cart Frame -->
+    <path d="M 125 110 H 170 L 205 310 C 209 332 227 348 249 348 H 360 C 382 348 399 333 403 312 L 425 195 C 428 178 415 162 398 162 H 195" 
+          fill="none" stroke="#18181b" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
     
-    <!-- Bag Body -->
-    <path d="M196 195 L210 320 C212 334 224 344 238 344 H274 C288 344 300 334 302 320 L316 195 C318 184 310 175 299 175 H213 C202 175 194 184 196 195 Z" 
-          fill="url(#bagGrad)" fill-opacity="0.85" stroke="#ffffff" stroke-width="3" stroke-opacity="0.3" />
-          
-    <path d="M215 235 Q256 270 297 235" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-opacity="0.6" />
-  </g>
+    <!-- Inner Cart Slats -->
+    <path d="M 225 218 H 380" stroke="#18181b" stroke-width="24" stroke-linecap="round"/>
+    <path d="M 240 274 H 360" stroke="#18181b" stroke-width="24" stroke-linecap="round"/>
 
-  <!-- Shopping Cart Modern Wireframe -->
-  <g filter="url(#glow)">
-    <!-- Main Cart Basket Track -->
-    <path d="M130 190 H170 L212 340 H360 L395 220 H185" 
-          fill="none" stroke="url(#cartGrad)" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" />
+    <!-- Wheels -->
+    <circle cx="245" cy="395" r="22" fill="#18181b"/>
+    <circle cx="360" cy="395" r="22" fill="#18181b"/>
 
-    <!-- Bottom chassis line -->
-    <path d="M185 365 H350" 
-          fill="none" stroke="url(#cartGrad)" stroke-width="18" stroke-linecap="round" />
-
-    <!-- Left Wheel -->
-    <circle cx="215" cy="415" r="22" fill="none" stroke="url(#cartGrad)" stroke-width="14" />
-    <circle cx="215" cy="415" r="8" fill="#38bdf8" />
-
-    <!-- Right Wheel -->
-    <circle cx="335" cy="415" r="22" fill="none" stroke="url(#cartGrad)" stroke-width="14" />
-    <circle cx="335" cy="415" r="8" fill="#a855f7" />
-  </g>
-
-  <!-- Speed Burst / Energy Sparks -->
-  <g filter="url(#glow)">
-    <!-- Speed Lines behind cart -->
-    <path d="M90 320 L145 320" stroke="url(#sparkGrad)" stroke-width="8" stroke-linecap="round" stroke-opacity="0.8" />
-    <path d="M105 345 L155 345" stroke="url(#sparkGrad)" stroke-width="8" stroke-linecap="round" stroke-opacity="0.9" />
-    <path d="M75 370 L135 370" stroke="url(#sparkGrad)" stroke-width="10" stroke-linecap="round" />
-
-    <!-- 4-point Dynamic Spark Star -->
-    <path d="M110 240 Q130 240 130 220 Q130 240 150 240 Q130 240 130 260 Q130 240 110 240 Z" fill="#38bdf8" />
-    <path d="M385 140 Q400 140 400 125 Q400 140 415 140 Q400 140 400 155 Q400 140 385 140 Z" fill="#c084fc" />
+    <!-- Orange Smile Swoosh Arrow -->
+    <path d="M 105 375 C 180 460 300 460 395 385" 
+          fill="none" stroke="#ea580c" stroke-width="32" stroke-linecap="round"/>
+    <!-- Dynamic Arrowhead -->
+    <polygon points="380,350 435,375 410,430" fill="#ea580c"/>
   </g>
 </svg>

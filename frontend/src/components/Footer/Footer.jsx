@@ -22,7 +22,7 @@ function Footer() {
         {/* Brand & Newsletter & 6. Social Icons Column */}
         <div className="footer-col brand-col">
           <div className="footer-logo">
-            <img src="/favicon.svg" alt="Cartify Logo" className="navbar-brand-logo" />
+            <img src="/logo.png" alt="Cartify Logo" className="navbar-brand-logo" />
             <span className="logo-text">Cart<span>ify</span></span>
           </div>
           <p className="footer-desc">
