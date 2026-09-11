@@ -1,11 +1,13 @@
 import { useContext, useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useClerk } from "@clerk/react";
 import { CartContext } from "../../context/CartContext";
 import defaultProducts from "../../data/products";
 import { getProducts } from "../../services/api";
 import MobileBottomNav from "./MobileBottomNav";
 
 function Navbar() {
+  const { signOut } = useClerk();
   const {
     cart,
     wishlist,
@@ -360,7 +362,12 @@ function Navbar() {
                   <div className="dropdown-divider"></div>
                   <button
                     className="dropdown-item logout-item"
-                    onClick={() => {
+                    onClick={async () => {
+                      try {
+                        if (signOut) await signOut();
+                      } catch (err) {
+                        console.error("Clerk signOut error:", err);
+                      }
                       logoutUser();
                       setAccountDropdownOpen(false);
                     }}
