@@ -280,14 +280,14 @@ function Navbar() {
           </Link>
           <Link
             to="/admin"
-            className={`admin-drawer-link ${location.pathname.startsWith("/admin") ? "active" : ""}`}
+            className={`admin-drawer-link mobile-only-nav-item ${location.pathname.startsWith("/admin") ? "active" : ""}`}
             onClick={() => setMobileOpen(false)}
           >
             ⚡ Admin
           </Link>
           <button
             type="button"
-            className="download-app-nav-btn"
+            className="download-app-nav-btn mobile-only-nav-item"
             onClick={() => {
               setMobileOpen(false);
               window.dispatchEvent(new CustomEvent("open-cartify-install"));

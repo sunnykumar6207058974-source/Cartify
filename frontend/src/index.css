@@ -106,14 +106,22 @@ button, input, select {
 }
 
 .navbar-container {
-  max-width: 1360px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 12px 24px;
+  padding: 10px 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   flex-wrap: nowrap;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (min-width: 992px) {
+  .mobile-only-nav-item {
+    display: none !important;
+  }
 }
 
 .navbar-brand {
@@ -320,17 +328,20 @@ button, input, select {
 }
 
 .cart-nav-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
   background: linear-gradient(135deg, var(--slate-900), var(--slate-800));
   color: white;
-  padding: 9px 18px;
+  padding: 8px 16px;
   border-radius: var(--radius-md);
   font-weight: 600;
   font-size: 14px;
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.15);
   transition: all 0.25s ease;
+  flex-shrink: 0;
+  white-space: nowrap;
+  box-sizing: border-box;
 }
 
 .cart-nav-btn:hover {
@@ -343,9 +354,16 @@ button, input, select {
   background: var(--accent-amber);
   color: var(--slate-900);
   font-weight: 800;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 12px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
 .login-nav-btn {
