@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import { Sparkles } from "lucide-react";
+import GlowRingButton from "../Common/GlowRingButton";
 
 function Hero() {
   const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0 });
@@ -216,9 +218,11 @@ function Hero() {
 
           {/* Action CTAs */}
           <div className="hero-buttons">
-            <Link to="/#featured-products" className="btn-primary hero-btn btn-3d-effect">
-              Shop Trending Items 🚀
-            </Link>
+            <GlowRingButton
+              to="/#featured-products"
+              label="Shop Trending Items"
+              icon={Sparkles}
+            />
             <Link to={`/product/${activeProduct.productId}`} className="btn-secondary hero-btn btn-3d-effect">
               Buy {activeProduct.name.split(" ")[0]} →
             </Link>
